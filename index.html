@@ -150,7 +150,7 @@
 
         .dashboard {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 16px;
         }
 
@@ -292,7 +292,7 @@
         }
 
         .radar-image-wrapper {
-            width: 100%;
+            width: 80%;
             height: auto;
             border-radius: 10px;
             overflow: hidden;
@@ -506,6 +506,12 @@
                     </div>
 
                     <div class="card">
+                        <div class="card-title">💨 最大陣風</div>
+                        <div class="card-value"><span id="max-wind">--</span></div>
+                        <div class="card-unit">m/s</div>
+                    </div>
+
+                    <div class="card">
                         <div class="card-title">🧭 風向</div>
                         <div class="card-value" id="wind-dir">--</div>
                     </div>
@@ -519,6 +525,7 @@
                     <div class="card">
                         <div class="card-title">👁️ 能見度</div>
                         <div class="card-value" id="visibility">--</div>
+                        <div class="card-unit">KM</div>
                     </div>
 
                     <div class="card">
@@ -784,7 +791,7 @@
             const minTemp = getNestedValue(weather, 'DailyExtreme.DailyLow.TemperatureInfo.AirTemperature');
             document.getElementById('min-temp').textContent = minTemp;
 
-            const maxWind = getNestedValue(weather, 'DailyExtreme.DailyMaximumWindGusts.WindSpeed');
+            const maxWind = getNestedValue(weather, 'GustInfo.PeakGustSpeed');
             document.getElementById('max-wind').textContent = maxWind;
 
             // 頁面更新時間
