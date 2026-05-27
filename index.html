@@ -33,6 +33,18 @@
             gap: 20px;
             animation: slideInLeft 0.6s ease-out;
         }
+        .coordinate-group2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;  /* 2列平分 */
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .info-item2 {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
 
         .info-card {
             background: white;
@@ -280,7 +292,7 @@
         }
 
         .radar-image-wrapper {
-            width: 100%;
+            width: 80%;
             height: auto;
             border-radius: 10px;
             overflow: hidden;
@@ -427,20 +439,23 @@
                 <!-- 基本資訊 -->
                 <div class="info-card">
                     <div class="info-title">📍 天氣觀測位置資訊</div>
-                    <div class="info-item">
+                    <div class="coordinate-group2">
+                    <div class="info-item2">
                         <div class="info-label">縣市</div>
                         <div class="info-value" id="county-name">--</div>
                     </div>
-                    <div class="info-item">
+                    <div class="info-item2">
                         <div class="info-label">鄉鎮</div>
                         <div class="info-value" id="town-name">--</div>
                     </div>
                 </div>
+</div>
 
                 <!-- 坐標資訊 -->
                 <div class="info-card">
                     <div class="info-title">🧭 天氣觀測座標資訊</div>
-                    <div class="info-item">
+                    <div class="coordinate-group2">
+                    <div class="info-item2">
                         <div class="info-label">北緯</div>
                         <div class="info-value" id="latitude" style="font-size: 0.95em;">--</div>
                     </div>
@@ -449,6 +464,8 @@
                         <div class="info-value" id="longitude" style="font-size: 0.95em;">--</div>
                     </div>
                 </div>
+</div>
+
 
                 <!-- 站點資訊 -->
                 <div class="info-card">
