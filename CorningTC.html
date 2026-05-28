@@ -1066,6 +1066,22 @@ async function loadRadarInfo() {
 //document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
         window.addEventListener('load', fetchWeatherData);
 
+      const res = await fetch(url);
+  const text = await res.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, 'text/xml');
+
+  const radarTime = xml.getElementsByTagName('DateTime')[0]?.textContent || '';
+  const formattedRadarTime = formatDateTime(radarTime);
+  document.getElementById('radarTime').textContent = formattedRadarTime;
+}
+
+loadRadarInfo().catch(err => {
+  console.error(err);
+  document.getElementById('radarTime').textContent = '讀取失敗';
+});
+
+
         setInterval(fetchWeatherData, 5 * 60 * 1000);
 
         setInterval(() => {
@@ -1086,29 +1102,15 @@ async function loadRadarInfo() {
                 document.getElementById('sidebar-radar-update-time').textContent = radarUpdateTime;
                 
             }
-        }, 1 * 60 * 1000);
 //document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
-  const res = await fetch(url);
-  const text = await res.text();
-  const parser = new DOMParser();
-  const xml = parser.parseFromString(text, 'text/xml');
-
-  const radarTime = xml.getElementsByTagName('DateTime')[0]?.textContent || '';
-  const formattedRadarTime = formatDateTime(radarTime);
-  document.getElementById('radarTime').textContent = formattedRadarTime;
-}
-
-loadRadarInfo().catch(err => {
-  console.error(err);
-  document.getElementById('radarTime').textContent = '讀取失敗';
-});
-
-setInterval(() => {
-  loadRadarInfo().catch(err => {
+              loadRadarInfo().catch(err => {
     console.error(err);
     document.getElementById('radarTime').textContent = '讀取失敗';
   });
-}, 60 * 1000);
+            
+        }, 1 * 60 * 1000);
+
+
 
     </script>
 </body>
