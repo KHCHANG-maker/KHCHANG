@@ -1066,7 +1066,7 @@ async function loadRadarInfo() {
 //document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
         window.addEventListener('load', fetchWeatherData);
 
-        setInterval(fetchWeatherData, 10 * 60 * 1000);
+        setInterval(fetchWeatherData, 5 * 60 * 1000);
 
         setInterval(() => {
             const radarImage = document.getElementById('radar-image');
