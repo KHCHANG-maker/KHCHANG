@@ -562,12 +562,12 @@
                     </div>
                     <div class="card">
                         <div class="card-title">🌡️ 溫度</div>
-                        <div class="card-value"><span id="temp">--</span></div>
+                        <div class="card-value"><span id="heat-temperature">--</span></div>
                         <div class="card-unit">°C</div>
                     </div>
                     <div class="card">
                         <div class="card-title">💧 濕度</div>
-                        <div class="card-value"><span id="humidity">--</span></div>
+                        <div class="card-value"><span id="heat-humidity">--</span></div>
                         <div class="card-unit">%</div>
                     </div>
                     <div class="card">
@@ -595,7 +595,7 @@
                         <div class="card-unit">KM</div>
                     </div>
                     <div class="card">
-                        <div class="card-title">🌧️ 降水</div>
+                        <div class="card-title">🌧️ 降雨</div>
                         <div class="card-value"><span id="precipitation">--</span></div>
                         <div class="card-unit">mm</div>
                     </div>
@@ -605,22 +605,7 @@
                     <div class="heat-index-title">🔥 熱指數評估</div>
 
                     <div class="heat-index-grid">
-                        <div class="heat-mini-card">
-                            <div class="heat-mini-label">測站名稱</div>
-                            <div class="heat-mini-value" id="heat-station-name">--</div>
-                        </div>
-                        <div class="heat-mini-card">
-                            <div class="heat-mini-label">觀測時間</div>
-                            <div class="heat-mini-value" id="heat-obs-time" style="font-size:1.15em;">--</div>
-                        </div>
-                        <div class="heat-mini-card">
-                            <div class="heat-mini-label">氣溫 AirTemperature</div>
-                            <div class="heat-mini-value" id="heat-temperature">--</div>
-                        </div>
-                        <div class="heat-mini-card">
-                            <div class="heat-mini-label">相對濕度 RelativeHumidity</div>
-                            <div class="heat-mini-value" id="heat-humidity">--</div>
-                        </div>
+                                          
                     </div>
 
                     <div class="heat-main-box" id="heat-box">
@@ -656,27 +641,27 @@
                     </div>
                 </div>
 
-                <div class="details-container">
-                    <div class="details-title">📊 詳細觀測數據</div>
-                    <div class="detail-row">
-                        <div class="detail-item">
-                            <div class="detail-label">日照時數</div>
-                            <div class="detail-value" id="sunshine">--</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">最高溫</div>
-                            <div class="detail-value"><span id="max-temp">--</span>°C</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">最低溫</div>
-                            <div class="detail-value"><span id="min-temp">--</span>°C</div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-label">最大風速</div>
-                            <div class="detail-value"><span id="max-wind-detail">--</span> m/s</div>
-                        </div>
-                    </div>
-                </div>
+<div class="details-container">
+    <div class="details-title">📊 詳細觀測數據</div>
+    <div class="detail-row">
+        <div class="detail-item">
+            <div class="detail-label">最高溫</div>
+            <div class="detail-value"><span id="max-temp">--</span>°C</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">最高溫發生時間</div>
+            <div class="detail-value" id="max-temp-time">--</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">最低溫</div>
+            <div class="detail-value"><span id="min-temp">--</span>°C</div>
+        </div>
+        <div class="detail-item">
+            <div class="detail-label">最低溫發生時間</div>
+            <div class="detail-value" id="min-temp-time">--</div>
+        </div>
+    </div>
+</div>
 
                 <div class="update-section">
                     <div class="update-time">
@@ -883,8 +868,8 @@
             const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
             const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
 
-            document.getElementById("heat-station-name").textContent = stationName;
-            document.getElementById("heat-obs-time").textContent = String(obsTime).replace("T", " ");
+            //document.getElementById("heat-station-name").textContent = stationName;
+            //document.getElementById("heat-obs-time").textContent = String(obsTime).replace("T", " ");
 
             if (tempRaw == null || humidityRaw == null) {
                 document.getElementById("heat-temperature").textContent = "--";
@@ -1001,10 +986,10 @@
             document.getElementById('weather-desc').textContent = `${emoji} ${weatherDesc}`;
 
             const temp = getNestedValue(weather, 'AirTemperature');
-            document.getElementById('temp').textContent = temp;
+            //document.getElementById('temp').textContent = temp;
 
             const humidity = getNestedValue(weather, 'RelativeHumidity');
-            document.getElementById('humidity').textContent = humidity;
+            //document.getElementById('humidity').textContent = humidity;
 
             const wind = getNestedValue(weather, 'WindSpeed');
             document.getElementById('wind').textContent = wind;
@@ -1021,18 +1006,27 @@
             const precipitation = getNestedValue(weather, 'Now.Precipitation');
             document.getElementById('precipitation').textContent = precipitation;
 
-            const sunshine = weather.SunshineDuration || '--';
-            document.getElementById('sunshine').textContent = sunshine === '-99' ? '--' : sunshine;
+            //const sunshine = weather.SunshineDuration || '--';
+            //document.getElementById('sunshine').textContent = sunshine === '-99' ? '--' : sunshine;
 
             const maxTemp = getNestedValue(weather, 'DailyExtreme.DailyHigh.TemperatureInfo.AirTemperature');
             document.getElementById('max-temp').textContent = maxTemp;
 
+            const maxTempTime = getNestedValue(weather, 'DailyExtreme.DailyHigh.TemperatureInfo.Occurred_at.DateTime');
+            const formattedmaxTempTime = formatDateTime(maxTempTime)
+            document.getElementById('max-temp-time').textContent = formattedmaxTempTime;
+
+
             const minTemp = getNestedValue(weather, 'DailyExtreme.DailyLow.TemperatureInfo.AirTemperature');
             document.getElementById('min-temp').textContent = minTemp;
 
+            const minTempTime = getNestedValue(weather, 'DailyExtreme.DailyLow.TemperatureInfo.Occurred_at.DateTime');
+            const formattedminTempTime = formatDateTime(minTempTime)
+            document.getElementById('min-temp-time').textContent = formattedminTempTime;
+
             const maxWind = getNestedValue(weather, 'GustInfo.PeakGustSpeed');
             document.getElementById('max-wind-card').textContent = maxWind;
-            document.getElementById('max-wind-detail').textContent = maxWind;
+            //document.getElementById('max-wind-detail').textContent = maxWind;
 
             const now = new Date();
             const pageUpdateTime = now.toLocaleString('zh-TW', {
