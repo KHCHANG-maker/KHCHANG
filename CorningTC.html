@@ -397,17 +397,20 @@
             grid-column: 1 / -1;
         }
 
-        .update-section {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            flex-wrap: wrap;
-            gap: 15px;
-        }
+.update-section {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.update-section button:first-of-type {
+    margin-left: auto;
+}
 
         .update-time {
             color: var(--primary-dark);
@@ -668,6 +671,7 @@
                         📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
                     </div>
                     <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
+                    <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
                 </div>
             </div>
         </div>
