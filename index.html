@@ -510,8 +510,8 @@
                     <div class="obs-time-box">
                         <div class="obs-time-label">天氣觀測</div>
                         <div class="obs-time-value" id="obs-time-display">--</div>
-                        <div class="obs-time-label">林園回波</div>
-                        <div class="obs-time-value" id="sidebar-radar-update-time">--</div>
+                        <div class="obs-time-label">雷達回波</div>
+                        <div class="obs-time-value" id="radarTime">--</div>
                     </div>
                 </div>
 
@@ -665,7 +665,7 @@
 
                 <div class="update-section">
                     <div class="update-time">
-                        📍 頁面開啟於: <span id="update-time">--</span>
+                        📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
                     </div>
                     <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
                 </div>
@@ -676,6 +676,8 @@
     <script>
         const API_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&StationId=CAN090&StationName=%E5%9C%8B%E4%B8%89S342K';
         const RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png';
+async function loadRadarInfo() {
+  const url = 'https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/O-A0084-003?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&format=XML';
 
         const HUMIDITY_LEVELS = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
 
@@ -1037,9 +1039,9 @@
                 minute: '2-digit',
                 second: '2-digit'
             });
-            document.getElementById('update-time').textContent = pageUpdateTime;
+            
         }
-
+//document.getElementById('update-time').textContent = pageUpdateTime;
         function updateRadarDisplay() {
             const radarImage = document.getElementById('radar-image');
             radarImage.src = RADAR_IMAGE_URL + '?t=' + new Date().getTime();
@@ -1081,6 +1083,30 @@
                 document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
             }
         }, 1 * 60 * 1000);
+
+  const res = await fetch(url);
+  const text = await res.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, 'text/xml');
+
+  const radarTime = xml.getElementsByTagName('DateTime')[0]?.textContent || '';
+  const formattedRadarTime = formatDateTime(radarTime);
+  document.getElementById('radarTime').textContent = formattedRadarTime;
+}
+
+
+
+loadRadarInfo().catch(err => {
+  console.error(err);
+  document.getElementById('radarTime').textContent = '讀取失敗';
+});
+
+setInterval(() => {
+  loadRadarInfo().catch(err => {
+    console.error(err);
+    document.getElementById('radarTime').textContent = '讀取失敗';
+  });
+}, 60 * 1000);
     </script>
 </body>
 </html>
