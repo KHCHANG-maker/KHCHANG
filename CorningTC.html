@@ -636,7 +636,7 @@
                         </div>
                         <div class="radar-info-item">
                             <span class="radar-info-label">⏱️ 更新：</span>
-                            <span id="main-radar-update-time">--</span>
+                            <span id="">--</span>
                         </div>
                     </div>
                     <div class="radar-image-wrapper">
@@ -1061,9 +1061,9 @@ async function loadRadarInfo() {
             });
 
             document.getElementById('sidebar-radar-update-time').textContent = radarUpdateTime;
-            document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
+            
         }
-
+//document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
         window.addEventListener('load', fetchWeatherData);
 
         setInterval(fetchWeatherData, 10 * 60 * 1000);
@@ -1084,10 +1084,10 @@ async function loadRadarInfo() {
                 });
 
                 document.getElementById('sidebar-radar-update-time').textContent = radarUpdateTime;
-                document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
+                
             }
         }, 1 * 60 * 1000);
-
+//document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
   const res = await fetch(url);
   const text = await res.text();
   const parser = new DOMParser();
