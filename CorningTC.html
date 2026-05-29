@@ -682,6 +682,15 @@
         const RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-002.png';
 async function loadRadarInfo() {
   const url = 'https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/O-A0084-002?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&format=XML';
+  const res = await fetch(url);
+  const text = await res.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, 'text/xml');
+
+  const radarTime = xml.getElementsByTagName('DateTime')[0]?.textContent || '';
+  const formattedRadarTime = formatDateTime(radarTime);
+  document.getElementById('radarTime').textContent = formattedRadarTime;
+}
 
         const HUMIDITY_LEVELS = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
 
@@ -1088,15 +1097,7 @@ async function loadRadarInfo() {
             }
         }, 1 * 60 * 1000);
 //document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
-  const res = await fetch(url);
-  const text = await res.text();
-  const parser = new DOMParser();
-  const xml = parser.parseFromString(text, 'text/xml');
 
-  const radarTime = xml.getElementsByTagName('DateTime')[0]?.textContent || '';
-  const formattedRadarTime = formatDateTime(radarTime);
-  document.getElementById('radarTime').textContent = formattedRadarTime;
-}
 
 loadRadarInfo().catch(err => {
   console.error(err);
