@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>氣象觀測站儀表板 - 康寧 - 臺南市善化區</title>
@@ -42,7 +43,102 @@ body {
     min-height: 0;
 }
 
-/* === 左欄:資訊條 + 觀測卡片 + 熱指數 + 詳細 === */
+/* === 歷史紀錄 === */
+
+.history-container {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.history-title {
+    color: var(--primary);
+    font-size: 0.9em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.history-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.78em;
+    align-items: center;
+}
+
+.history-chart-wrapper {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+/* === 歷史紀錄 - 補充樣式 === */
+.history-stat {
+    color: var(--primary-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.history-stat-label {
+    color: var(--text-sub);
+    font-size: 0.95em;
+}
+
+.history-stat-value {
+    font-weight: bold;
+    font-size: 1.05em;
+}
+
+.history-stat.heat .history-stat-value {
+    color: #dc2626;
+}
+
+.history-clear-btn {
+    background: white;
+    color: #dc2626;
+    border: 1.5px solid #dc2626;
+    padding: 3px 12px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
+
+.history-clear-btn:hover {
+    background: #dc2626;
+    color: white;
+}
+
+.history-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    font-size: 0.95em;
+    text-align: center;
+    line-height: 1.6;
+    padding: 20px;
+}
 
 
 /* 頂部資訊橫條:站名 + 位置 + 座標 + ID + 更新時間 */
@@ -112,6 +208,26 @@ body {
     margin-right: 4px;
 }
 
+
+
+/* 觀測卡片區:flex:1 撐滿剩餘空間 */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    /* 移除 flex:1 和 min-height:0 */
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 6px 8px;          /* 10 → 6,變矮 */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+    border-top: 3px solid var(--primary);
+    text-align: center;
+}
+
 /* 觀測卡片 */
 .card:hover {
     transform: translateY(-3px);
@@ -120,31 +236,36 @@ body {
 
 .card-title {
     color: var(--primary);
-    font-size: 0.9em;
+    font-size: 0.88em;         /* 0.78 → 0.88 變大 */
     text-transform: uppercase;
     letter-spacing: 0.8px;
-    margin-bottom: 6px;
+    margin-bottom: 2px;        /* 4 → 2 */
     opacity: 0.85;
 }
 
 .card-value {
-    font-size: 2em;
+    font-size: 1.9em;          /* 1.5 → 1.9 變大 */
     font-weight: bold;
     color: var(--primary-dark);
-    line-height: 1.2;
+    line-height: 1.15;
 }
 
 .card-unit {
-    font-size: 0.85em;
+    font-size: 0.85em;         /* 0.75 → 0.85 變大 */
     color: var(--text-sub);
-    margin-top: 2px;
 }
 
 
 .left-col {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-rows: 
+        auto                  /* 站點橫條 */
+        auto                  /* 熱指數 */
+        auto                  /* dashboard 9 卡 */
+        minmax(0, 1fr)        /* ⭐ 歷史圖表(吃剩餘空間)*/
+        auto                  /* 詳細數據 */
+        auto;                 /* 底部按鈕 */
+    gap: 10px;
     min-height: 0;
     overflow: hidden;
 }
@@ -153,35 +274,14 @@ body {
     display: none;
 }
 
-/* 觀測卡片區:flex:1 撐滿剩餘空間 */
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    flex: 1;                /* ⭐ 關鍵:吃掉剩餘空間 */
-    min-height: 0;
-}
 
-.card {
-    background: white;
-    border-radius: 12px;
-    padding: 12px 10px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    transition: transform 0.3s ease;
-    border-top: 3px solid var(--primary);
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;  /* 內容垂直置中 */
-    min-height: 0;
-}
 
 /* 熱指數 + 詳細 */
 .heat-index-container,
 .details-container {
     background: white;
     border-radius: 12px;
-    padding: 14px;
+    padding: 10px 14px;        /* 14 → 10 14 */
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     border: 1px solid var(--border-light);
 }
@@ -194,8 +294,8 @@ body {
 .heat-index-title,
 .details-title {
     color: var(--primary);
-    font-size: 0.95em;
-    margin-bottom: 10px;
+    font-size: 0.9em;          /* 0.95 → 0.9 */
+    margin-bottom: 6px;        /* 10 → 6 */
     font-weight: bold;
     display: flex;
     align-items: center;
@@ -203,14 +303,14 @@ body {
 }
 
 .heat-main-box {
-    padding: 12px 16px;
+    padding: 18px 20px;        /* 10 14 → 18 20 變高 */
     border-radius: 12px;
     color: white;
     background: linear-gradient(135deg, #4DA6D6, #1e5a96);
     box-shadow: 0 6px 18px rgba(77,166,214,0.25);
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 16px;
+    gap: 18px;
     align-items: center;
 }
 
@@ -225,61 +325,55 @@ body {
     padding-right: 16px;
 }
 
-.heat-main-title { font-size: 0.78em; opacity: 0.95; }
+.heat-main-title { 
+    font-size: 0.88em;         /* 0.78 → 0.88 略大 */
+    opacity: 0.95; 
+}
+
 .heat-main-value {
-    font-size: 2em;
+    font-size: 2.2em;          /* 1.7 → 2.2 變大 */
     font-weight: 800;
     line-height: 1;
 }
 
 .heat-main-meta {
-    font-size: 0.85em;
+    font-size: 0.95em;         /* 0.85 → 0.95 略大 */
     opacity: 0.97;
-    line-height: 1.6;
+    line-height: 1.7;
 }
 
 /* 詳細觀測:緊湊版 */
-.details-container {
-    padding: 12px 14px;     /* 縮小內距 */
-}
-
-.details-title {
-    margin-bottom: 8px;     /* 縮小標題與卡片距離 */
-}
-
 .detail-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 10px;
-    /* 不要 flex:1,讓卡片用自然高度 */
 }
 
 .detail-item {
-    padding: 8px 12px;      /* 從 10-14px 縮成 8-12px */
+    padding: 6px 10px;         /* 8 12 → 6 10 */
     background: var(--bg-light);
     border-radius: 8px;
     border-left: 3px solid var(--primary);
-    /* 移除 flex 撐高 */
 }
 
 .detail-label {
-    font-size: 0.85em;
+    font-size: 0.78em;         /* 0.85 → 0.78 */
     color: var(--text-sub);
-    margin-bottom: 3px;
+    margin-bottom: 2px;        /* 3 → 2 */
 }
 
 .detail-value {
-    font-size: 1.1em;
+    font-size: 1em;            /* 1.1 → 1 */
     font-weight: bold;
     color: var(--primary-dark);
-    line-height: 1.3;
+    line-height: 1.2;          /* 1.3 → 1.2 */
 }
 
 /* 底部更新區 */
 .update-section {
     background: white;
     border-radius: 12px;
-    padding: 10px 16px;
+    padding: 8px 14px;         /* 10 16 → 8 14 */
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     display: flex;
     align-items: center;
@@ -288,7 +382,7 @@ body {
 
 .update-time {
     color: var(--primary-dark);
-    font-size: 0.85em;
+    font-size: 0.8em;          /* 0.85 → 0.8 */
     flex: 1;
 }
 
@@ -296,12 +390,12 @@ body {
     background: white;
     color: var(--primary);
     border: 2px solid var(--primary);
-    padding: 7px 18px;
+    padding: 6px 16px;         /* 7 18 → 6 16 */
     border-radius: 20px;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
-    font-size: 0.85em;
+    font-size: 0.8em;          /* 0.85 → 0.8 */
     white-space: nowrap;
 }
 
@@ -406,6 +500,32 @@ body {
     .dashboard { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
     .detail-row { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* === 歷史趨勢 Modal === */
+
+
+.clear-btn {
+    background: white;
+    color: #dc2626;
+    border: 1.5px solid #dc2626;
+    padding: 5px 14px;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s;
+}
+
+.clear-btn:hover {
+    background: #dc2626;
+    color: white;
+}
+
+.chart-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-sub);
+    font-size: 1.1em;
+}
  </style>
 </head>
 
@@ -463,6 +583,22 @@ body {
 
             <div id="error-container"></div>
 
+            <!-- 熱指數 -->
+            <div class="heat-index-container">
+                <div class="heat-index-title">🔥 熱指數評估</div>
+                <div class="heat-index-grid"></div>
+                <div class="heat-main-box" id="heat-box">
+                    <div class="heat-main-left">
+                        <div class="heat-main-title">目前熱指數</div>
+                        <div class="heat-main-value" id="heat-index-value">--</div>
+                    </div>
+                    <div>
+                        <div class="heat-main-meta" id="heat-risk-level">風險等級:--</div>
+                        <div class="heat-main-meta" id="heat-mapping-info">表格對應:--</div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 9 個觀測卡片 -->
             <div class="dashboard">
                 <div class="card">
@@ -510,21 +646,23 @@ body {
                 </div>
             </div>
 
-            <!-- 熱指數 -->
-            <div class="heat-index-container">
-                <div class="heat-index-title">🔥 熱指數評估</div>
-                <div class="heat-index-grid"></div>
-                <div class="heat-main-box" id="heat-box">
-                    <div class="heat-main-left">
-                        <div class="heat-main-title">目前熱指數</div>
-                        <div class="heat-main-value" id="heat-index-value">--</div>
-                    </div>
-                    <div>
-                        <div class="heat-main-meta" id="heat-risk-level">風險等級:--</div>
-                        <div class="heat-main-meta" id="heat-mapping-info">表格對應:--</div>
-                    </div>
-                </div>
-            </div>
+<!-- 📈 內嵌歷史趨勢圖 -->
+<div class="history-container">
+   <div class="history-header">
+    <div class="history-title">📈 過去 24 小時溫度與熱指數趨勢</div>
+    <div class="history-stats">
+        <span class="history-stat heat">
+            <span class="history-stat-label">最高熱指數:</span>
+            <span class="history-stat-value" id="hist-max-heat">--</span>
+        </span>
+        <button class="history-clear-btn" onclick="clearHistory()">🗑️ 清除</button>
+    </div>
+</div>
+    <div class="history-chart-wrapper">
+        <canvas id="history-chart"></canvas>
+    </div>
+</div>
+
 
             <!-- 詳細數據(4 欄橫向) -->
             <div class="details-container">
@@ -550,13 +688,13 @@ body {
             </div>
 
             <!-- 底部更新區 -->
-            <div class="update-section">
-                <div class="update-time">
-                    📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
-                </div>
-                <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
-                <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
-            </div>
+<div class="update-section">
+    <div class="update-time">
+        📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
+    </div>
+    <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
+    <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
+</div>
         </div>
 
         <!-- ============ 右欄:雷達 ============ -->
@@ -585,6 +723,151 @@ body {
 
     </div>
 </div>
+
+<script>
+// === 歷史資料儲存與圖表(內嵌版)===
+const HISTORY_KEY = 'weather_history_data';
+const HOURS_24_MS = 24 * 60 * 60 * 1000;
+let historyChart = null;
+
+function saveToHistory(temperature, heatIndex) {
+    const temp = parseFloat(temperature);
+    const heat = parseFloat(heatIndex);
+    if (isNaN(temp) && isNaN(heat)) return;
+
+    const now = Date.now();
+    let data = [];
+    try {
+        data = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    } catch (e) { data = []; }
+
+    if (data.length > 0 && now - data[data.length - 1].time < 5 * 60 * 1000) {
+        data[data.length - 1] = { time: now, temp: temp, heat: heat };
+    } else {
+        data.push({ time: now, temp: temp, heat: heat });
+    }
+
+    const cutoff = now - HOURS_24_MS;
+    data = data.filter(d => d.time >= cutoff);
+
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(data));
+    renderHistoryChart();   // ⭐ 存完立即更新圖表
+}
+
+function clearHistory() {
+    if (confirm('確定要清除所有歷史記錄嗎?')) {
+        localStorage.removeItem(HISTORY_KEY);
+        renderHistoryChart();
+    }
+}
+
+function renderHistoryChart() {
+    let data = [];
+    try {
+        data = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    } catch (e) { data = []; }
+
+    const wrapper = document.querySelector('.history-chart-wrapper');
+    const setStat = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    if (data.length === 0) {
+        wrapper.innerHTML = '<div class="history-empty">📭 尚無歷史資料 — 每次刷新後會自動記錄,稍後即可看到趨勢曲線</div>';
+        setStat('hist-max-temp', '--');
+        setStat('hist-min-temp', '--');
+        setStat('hist-max-heat', '--');
+        return;
+    }
+
+    if (!document.getElementById('history-chart')) {
+        wrapper.innerHTML = '<canvas id="history-chart"></canvas>';
+    }
+
+    data.sort((a, b) => a.time - b.time);
+
+    const labels = data.map(d => {
+        const date = new Date(d.time);
+        return date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+    });
+    const tempData = data.map(d => isNaN(d.temp) ? null : d.temp);
+    const heatData = data.map(d => isNaN(d.heat) ? null : d.heat);
+
+    const validTemps = tempData.filter(t => t !== null);
+    const validHeats = heatData.filter(t => t !== null);
+    setStat('hist-max-temp', validTemps.length ? Math.max(...validTemps).toFixed(1) + ' °C' : '--');
+    setStat('hist-min-temp', validTemps.length ? Math.min(...validTemps).toFixed(1) + ' °C' : '--');
+    setStat('hist-max-heat', validHeats.length ? Math.max(...validHeats).toFixed(1) + ' °C' : '--');
+
+    if (historyChart) historyChart.destroy();
+
+    const ctx = document.getElementById('history-chart').getContext('2d');
+    historyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '🌡️ 溫度',
+                    data: tempData,
+                    borderColor: '#4DA6D6',
+                    backgroundColor: 'rgba(77, 166, 214, 0.15)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    borderWidth: 2
+                },
+                {
+                    label: '🔥 熱指數',
+                    data: heatData,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 2,
+                    pointHoverRadius: 5,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top',
+                    align: 'end',
+                    labels: { font: { size: 11, weight: 'bold' }, boxWidth: 14, padding: 8 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 90, 150, 0.95)',
+                    padding: 10,
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 12 }
+                }
+            },
+            scales: {
+                y: {
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: { font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 }, maxTicksLimit: 10 }
+                }
+            }
+        }
+    });
+}
+
+// 頁面載入時就渲染一次圖表
+window.addEventListener('load', () => {
+    setTimeout(renderHistoryChart, 500);
+});
+</script>
 </body>
 </html>
 
@@ -869,6 +1152,10 @@ async function loadRadarInfo() {
 
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
+                
+                const currentTemp = document.getElementById('heat-temperature').textContent;
+const currentHeat = document.getElementById('heat-index-value').textContent;
+saveToHistory(currentTemp, currentHeat);
 
             } catch (error) {
                 console.error('錯誤:', error);
@@ -882,6 +1169,8 @@ async function loadRadarInfo() {
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
             }
+            // 取得目前畫面上的值來儲存
+
         }
 
         function updateDisplay(station) {
@@ -1023,6 +1312,8 @@ setInterval(() => {
     document.getElementById('radarTime').textContent = '讀取失敗';
   });
 }, 60 * 1000);
+
+
     </script>
 </body>
 </html>
