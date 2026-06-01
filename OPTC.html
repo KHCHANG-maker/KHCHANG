@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>氣象觀測站儀表板 - 康寧 - 臺南市善化區</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #4DA6D6;
+    --primary-dark: #1e5a96;
+    --primary-light: #87CEEB;
+    --bg-light: #f0f8ff;
+    --border-light: #B0E0E6;
+    --text-sub: #7fa8c4;
+}
+
+html, body {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
+    padding: 12px;
+}
+
+/* 主佈局:兩欄 */
+.main-layout {
+    height: calc(100vh - 24px);
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: 12px;
+    max-width: 1920px;
+    margin: 0 auto;
+    min-height: 0;
+}
+
+/* === 左欄:資訊條 + 觀測卡片 + 熱指數 + 詳細 === */
+
+
+/* 頂部資訊橫條:站名 + 位置 + 座標 + ID + 更新時間 */
+.station-bar {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 14px 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    display: grid;
+    grid-template-columns: auto 1.3fr 1.1fr 1.1fr 1.2fr 1.2fr;  /* 6 欄:icon + 站名 + 位置 + 座標 + 觀測時間 + 雷達時間 */
+    gap: 18px;
+    align-items: center;
+}
+
+.station-bar-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding-left: 18px;
+}
+
+.station-bar-block:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.station-bar-label {
+    font-size: 0.7em;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.station-bar-value {
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+.station-bar-main {
+    text-align: center;
+}
+
+.station-bar-main .station-bar-value {
+    font-size: 1.4em;
+}
+
+.station-bar-icon {
+    font-size: 1.6em;
+}
+
+.station-bar-times {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    font-size: 0.78em;
+}
+
+.station-bar-times span {
+    opacity: 0.95;
+}
+
+.station-bar-times .time-label {
+    opacity: 0.75;
+    margin-right: 4px;
+}
+
+/* 觀測卡片 */
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.card-title {
+    color: var(--primary);
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 6px;
+    opacity: 0.85;
+}
+
+.card-value {
+    font-size: 2em;
+    font-weight: bold;
+    color: var(--primary-dark);
+    line-height: 1.2;
+}
+
+.card-unit {
+    font-size: 0.85em;
+    color: var(--text-sub);
+    margin-top: 2px;
+}
+
+
+.left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 0;
+    overflow: hidden;
+}
+
+#error-container:empty {
+    display: none;
+}
+
+/* 觀測卡片區:flex:1 撐滿剩餘空間 */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    flex: 1;                /* ⭐ 關鍵:吃掉剩餘空間 */
+    min-height: 0;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+    border-top: 3px solid var(--primary);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;  /* 內容垂直置中 */
+    min-height: 0;
+}
+
+/* 熱指數 + 詳細 */
+.heat-index-container,
+.details-container {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+}
+
+#error-container:empty,
+.heat-index-grid:empty {
+    display: none;
+}
+
+.heat-index-title,
+.details-title {
+    color: var(--primary);
+    font-size: 0.95em;
+    margin-bottom: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.heat-main-box {
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: white;
+    background: linear-gradient(135deg, #4DA6D6, #1e5a96);
+    box-shadow: 0 6px 18px rgba(77,166,214,0.25);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 16px;
+    align-items: center;
+}
+
+.heat-main-box.level-1 { background: linear-gradient(135deg, #059669, #047857); }
+.heat-main-box.level-2 { background: linear-gradient(135deg, #e6b800, #cc9900); }
+.heat-main-box.level-3 { background: linear-gradient(135deg, #ea580c, #c2410c); }
+.heat-main-box.level-4 { background: linear-gradient(135deg, #dc2626, #991b1b); }
+
+.heat-main-left {
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.3);
+    padding-right: 16px;
+}
+
+.heat-main-title { font-size: 0.78em; opacity: 0.95; }
+.heat-main-value {
+    font-size: 2em;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.heat-main-meta {
+    font-size: 0.85em;
+    opacity: 0.97;
+    line-height: 1.6;
+}
+
+/* 詳細觀測:緊湊版 */
+.details-container {
+    padding: 12px 14px;     /* 縮小內距 */
+}
+
+.details-title {
+    margin-bottom: 8px;     /* 縮小標題與卡片距離 */
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    /* 不要 flex:1,讓卡片用自然高度 */
+}
+
+.detail-item {
+    padding: 8px 12px;      /* 從 10-14px 縮成 8-12px */
+    background: var(--bg-light);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+    /* 移除 flex 撐高 */
+}
+
+.detail-label {
+    font-size: 0.85em;
+    color: var(--text-sub);
+    margin-bottom: 3px;
+}
+
+.detail-value {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: var(--primary-dark);
+    line-height: 1.3;
+}
+
+/* 底部更新區 */
+.update-section {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.update-time {
+    color: var(--primary-dark);
+    font-size: 0.85em;
+    flex: 1;
+}
+
+.refresh-btn {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 7px 18px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.refresh-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.03);
+}
+
+/* === 右欄:雷達 === */
+.radar-container {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.radar-title {
+    color: var(--primary);
+    font-size: 1em;
+    margin-bottom: 8px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.radar-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.82em;
+}
+
+.radar-info-item { color: var(--primary-dark); }
+.radar-info-label { font-weight: bold; color: var(--primary); }
+
+.radar-image-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-light);
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 6px;
+}
+
+.radar-image {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: 8px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--primary-dark);
+    font-size: 1.2em;
+}
+
+/* 響應式 */
+@media (max-width: 1280px), (max-height: 650px) {
+    html, body {
+        overflow: auto;
+        height: auto;
+    }
+    .main-layout {
+        height: auto;
+        grid-template-columns: 1fr;
+    }
+    .radar-image-wrapper {
+        min-height: 500px;
+    }
+}
+
+@media (max-width: 768px) {
+    .station-bar {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .station-bar-block {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid rgba(255,255,255,0.3);
+        padding-top: 8px;
+    }
+    .station-bar-block:first-child { border-top: none; padding-top: 0; }
+    .dashboard { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
+    .detail-row { grid-template-columns: repeat(2, 1fr); }
+}
+ </style>
+</head>
+
+
+
+
+
+<body>
+    <div id="loading" class="loading">加載中... 請稍候 ⏳</div>
+
+    <div id="content" style="display: none;">
+    <div class="main-layout">
+
+        <!-- ============ 左欄(合併後) ============ -->
+        <div class="left-col">
+
+<!-- 頂部資訊橫條 -->
+<div class="station-bar">
+    <div class="station-bar-icon">📡</div>
+
+    <div class="station-bar-block station-bar-main">
+        <div class="station-bar-value" id="station-name">--</div>
+        <div class="station-bar-label">
+            <span id="station-id">--</span>
+            <span id="station-code" style="display:none;"></span>
+        </div>
+    </div>
+
+    <div class="station-bar-block">
+        <div class="station-bar-label">📍 觀測位置</div>
+        <div class="station-bar-value">
+            <span id="county-name">--</span> <span id="town-name">--</span>
+        </div>
+    </div>
+
+    <div class="station-bar-block">
+        <div class="station-bar-label">🧭 座標</div>
+        <div class="station-bar-value" style="font-size: 0.9em;">
+            N <span id="latitude">--</span><br>
+            E <span id="longitude">--</span>
+        </div>
+    </div>
+
+    <!-- 時間改成上下兩個 block -->
+    <div class="station-bar-block">
+        <div class="station-bar-label">⏰ 觀測時間</div>
+        <div class="station-bar-value" id="obs-time-display" style="font-size: 0.95em;">--</div>
+    </div>
+
+    <div class="station-bar-block">
+        <div class="station-bar-label">🛰️ 雷達時間</div>
+        <div class="station-bar-value" id="radarTime" style="font-size: 0.95em;">--</div>
+    </div>
+</div>
+
+            <div id="error-container"></div>
+
+            <!-- 9 個觀測卡片 -->
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-title">🌤️ 天氣狀況</div>
+                    <div class="card-value" id="weather-desc" style="font-size: 1.2em;">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🌡️ 溫度</div>
+                    <div class="card-value"><span id="heat-temperature">--</span></div>
+                    <div class="card-unit">°C</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">💧 濕度</div>
+                    <div class="card-value"><span id="heat-humidity">--</span></div>
+                    <div class="card-unit">%</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">💨 風速</div>
+                    <div class="card-value"><span id="wind">--</span></div>
+                    <div class="card-unit">m/s</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">💨 最大陣風</div>
+                    <div class="card-value"><span id="max-wind-card">--</span></div>
+                    <div class="card-unit">m/s</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🧭 風向</div>
+                    <div class="card-value" id="wind-dir" style="font-size: 1.2em;">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">⬆️ 氣壓</div>
+                    <div class="card-value"><span id="pressure">--</span></div>
+                    <div class="card-unit">hPa</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">👁️ 能見度</div>
+                    <div class="card-value" id="visibility" style="font-size: 1.2em;">--</div>
+                    <div class="card-unit">KM</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🌧️ 降雨</div>
+                    <div class="card-value"><span id="precipitation">--</span></div>
+                    <div class="card-unit">mm</div>
+                </div>
+            </div>
+
+            <!-- 熱指數 -->
+            <div class="heat-index-container">
+                <div class="heat-index-title">🔥 熱指數評估</div>
+                <div class="heat-index-grid"></div>
+                <div class="heat-main-box" id="heat-box">
+                    <div class="heat-main-left">
+                        <div class="heat-main-title">目前熱指數</div>
+                        <div class="heat-main-value" id="heat-index-value">--</div>
+                    </div>
+                    <div>
+                        <div class="heat-main-meta" id="heat-risk-level">風險等級:--</div>
+                        <div class="heat-main-meta" id="heat-mapping-info">表格對應:--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 詳細數據(4 欄橫向) -->
+            <div class="details-container">
+                <div class="details-title">📊 詳細觀測數據</div>
+                <div class="detail-row">
+                    <div class="detail-item">
+                        <div class="detail-label">最高溫</div>
+                        <div class="detail-value"><span id="max-temp">--</span> °C</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">最高溫發生時間</div>
+                        <div class="detail-value" id="max-temp-time">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">最低溫</div>
+                        <div class="detail-value"><span id="min-temp">--</span> °C</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">最低溫發生時間</div>
+                        <div class="detail-value" id="min-temp-time">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部更新區 -->
+            <div class="update-section">
+                <div class="update-time">
+                    📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
+                </div>
+                <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
+                <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
+            </div>
+        </div>
+
+        <!-- ============ 右欄:雷達 ============ -->
+        <div class="radar-container">
+            <div class="radar-title">🛰️ 林園雷達回波圖</div>
+            <div class="radar-info">
+                <div class="radar-info-item">
+                    <span class="radar-info-label">📍 位置:</span>
+                    東經 <span id="radar-lon">120.38°</span>,北緯 <span id="radar-lat">22.53°</span>
+                </div>
+                <div class="radar-info-item">
+                    <span class="radar-info-label">📏 範圍:</span>
+                    <span id="radar-range">距雷達 150 km</span>
+                </div>
+                <div class="radar-info-item">
+                    <span class="radar-info-label">⏱️ 更新:</span>
+                    <span>--</span>
+                </div>
+            </div>
+            <div class="radar-image-wrapper">
+                <img id="radar-image" class="radar-image"
+                     src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png"
+                     alt="林園雷達回波圖" onerror="handleRadarImageError()">
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+
+    <script>
+        const API_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&StationId=C0F9T0&StationName=%E8%A5%BF%E5%B1%AF';
+        const RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-002.png';
+async function loadRadarInfo() {
+  const url = 'https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/O-A0084-003?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&format=XML';
+  const res = await fetch(url);
+  const text = await res.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, 'text/xml');
+
+  const radarTime = xml.getElementsByTagName('DateTime')[0]?.textContent || '';
+  const formattedRadarTime = formatDateTime(radarTime);
+  document.getElementById('radarTime').textContent = formattedRadarTime;
+}
+
+        const HUMIDITY_LEVELS = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100];
+
+        const HEAT_INDEX_TABLE = {
+            26.7: [26.7, 26.7, 27.2, 27.2, 27.8, 27.8, 28.3, 28.9, 28.9, 29.4, 30.0, 30.0, 30.6],
+            27.8: [27.2, 27.8, 28.3, 28.9, 28.9, 29.4, 30.0, 31.1, 31.7, 32.2, 32.8, 33.9, 35.0],
+            28.9: [28.3, 28.9, 29.4, 30.0, 31.1, 31.7, 32.2, 33.3, 34.4, 35.6, 36.7, 37.8, 39.4],
+            30.0: [29.4, 30.6, 31.1, 31.7, 32.8, 33.9, 35.0, 36.1, 37.8, 38.9, 40.6, 42.2, 44.4],
+            31.1: [31.1, 31.7, 32.8, 33.9, 35.0, 36.7, 37.8, 39.4, 41.1, 43.3, 45.0, 47.2, 49.4],
+            32.2: [32.8, 33.9, 35.0, 36.1, 37.8, 39.4, 40.6, 42.8, 45.0, 47.2, 50.0, 52.8, 55.6],
+            33.3: [34.4, 35.6, 37.2, 38.3, 40.6, 42.2, 44.4, 46.7, 49.4, 52.2, 55.0, 58.3, null],
+            34.4: [36.1, 37.8, 39.4, 41.1, 43.3, 45.6, 48.3, 51.1, 53.9, 57.2, null, null, null],
+            35.6: [38.3, 40.0, 42.2, 44.4, 46.7, 49.4, 52.2, 55.6, 58.9, null, null, null, null],
+            36.7: [40.6, 42.8, 45.0, 47.2, 50.6, 53.3, 56.7, null, null, null, null, null, null],
+            37.8: [42.8, 45.6, 47.8, 51.1, 53.9, 57.8, null, null, null, null, null, null, null],
+            38.9: [45.6, 48.3, 51.1, 54.4, 58.3, null, null, null, null, null, null, null, null],
+            40.0: [48.3, 51.1, 55.0, 58.3, null, null, null, null, null, null, null, null, null],
+            41.1: [51.1, 54.4, 58.3, null, null, null, null, null, null, null, null, null, null],
+            42.2: [54.4, 58.3, null, null, null, null, null, null, null, null, null, null, null],
+            43.3: [57.8, null, null, null, null, null, null, null, null, null, null, null, null]
+        };
+
+        const TEMP_LEVELS = Object.keys(HEAT_INDEX_TABLE).map(Number).sort((a, b) => a - b);
+
+        function getWindDirection(degree) {
+            if (!degree || degree === '--') return '--';
+            const deg = parseFloat(degree);
+            if (isNaN(deg)) return '--';
+
+            const directions = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東',
+                                '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西'];
+            const index = Math.round(deg / 22.5) % 16;
+            return directions[index];
+        }
+
+        function getWeatherEmoji(weather) {
+            const emojiMap = {
+                '晴': '☀️',
+                '多雲': '⛅',
+                '陰': '☁️',
+                '陰雨': '🌧️',
+                '雨': '🌧️',
+                '雷': '⛈️',
+                '雪': '❄️',
+                '霧': '🌫️',
+            };
+
+            for (const [key, emoji] of Object.entries(emojiMap)) {
+                if (weather && weather.includes(key)) {
+                    return emoji;
+                }
+            }
+            return '🌤️';
+        }
+
+        function getNestedValue(obj, path, defaultValue = '--') {
+            try {
+                const value = path.split('.').reduce((current, prop) => current?.[prop], obj);
+                return value !== undefined && value !== null && value !== '-99' ? value : defaultValue;
+            } catch (e) {
+                return defaultValue;
+            }
+        }
+
+        function formatDateTime(dateTimeString) {
+            if (!dateTimeString || dateTimeString === '--') return '--';
+            try {
+                const date = new Date(dateTimeString);
+                return date.toLocaleString('zh-TW', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            } catch (e) {
+                return dateTimeString;
+            }
+        }
+
+        function handleRadarImageError() {
+            const radarImage = document.getElementById('radar-image');
+            radarImage.alt = '雷達圖像加載失敗';
+            radarImage.style.display = 'none';
+            radarImage.parentElement.innerHTML = '<p style="color: #666; padding: 20px;">無法加載雷達圖像，請稍後重試</p>';
+        }
+
+        function getRiskLevel(heatIndex) {
+            if (heatIndex >= 54.4) return { level: 4, text: "第四級 極度危險" };
+            if (heatIndex >= 40.6) return { level: 3, text: "第三級 危險" };
+            if (heatIndex >= 32.2) return { level: 2, text: "第二級 格外注意" };
+            if (heatIndex >= 27.0) return { level: 1, text: "第一級 注意" };
+            return { level: 0, text: "未達分級門檻" };
+        }
+
+        function getCeilValue(levels, value) {
+            for (const lv of levels) {
+                if (value <= lv) return lv;
+            }
+            return levels[levels.length - 1];
+        }
+
+        function getHeatIndex(temp, humidity) {
+            const mappedTemp = getCeilValue(TEMP_LEVELS, temp);
+            const mappedHumidity = getCeilValue(HUMIDITY_LEVELS, humidity);
+            const humidityIndex = HUMIDITY_LEVELS.indexOf(mappedHumidity);
+            const row = HEAT_INDEX_TABLE[mappedTemp];
+
+            if (!row) {
+                throw new Error("找不到對應的溫度表格資料");
+            }
+
+            let heatIndex = row[humidityIndex];
+
+            if (heatIndex == null) {
+                for (let i = humidityIndex; i >= 0; i--) {
+                    if (row[i] != null) {
+                        heatIndex = row[i];
+                        break;
+                    }
+                }
+            }
+
+            if (heatIndex == null) {
+                throw new Error("熱指數表格中找不到可用值");
+            }
+
+            return {
+                heatIndex,
+                mappedTemp,
+                mappedHumidity
+            };
+        }
+
+        function getElementValue(weatherElement, name) {
+            if (!weatherElement) return null;
+
+            if (Array.isArray(weatherElement)) {
+                const found = weatherElement.find(el => el.elementName === name);
+                if (!found) return null;
+
+                if (Array.isArray(found.elementValue)) return found.elementValue[0];
+                if (found.elementValue != null) return found.elementValue;
+                return null;
+            }
+
+            if (typeof weatherElement === "object") {
+                const value = weatherElement[name];
+                if (value == null) return null;
+
+                if (typeof value === "string" || typeof value === "number") {
+                    return value;
+                }
+
+                if (typeof value === "object") {
+                    if (value.elementValue != null) return value.elementValue;
+                    if (value.value != null) return value.value;
+                }
+            }
+
+            return null;
+        }
+
+        function normalizeValue(raw) {
+            if (raw == null) return null;
+
+            if (Array.isArray(raw)) {
+                return normalizeValue(raw[0]);
+            }
+
+            if (typeof raw === "object") {
+                if (raw.value != null) return normalizeValue(raw.value);
+                if (raw.elementValue != null) return normalizeValue(raw.elementValue);
+            }
+
+            return raw;
+        }
+
+        function updateHeatIndexDisplay(station) {
+            const stationName =
+                station?.StationName ||
+                station?.GeoInfo?.StationName ||
+                `${station?.GeoInfo?.CountyName || ''}${station?.GeoInfo?.TownName || ''}` ||
+                "未知測站";
+
+            const obsTime = station?.ObsTime?.DateTime || station?.ObsTime || "未知時間";
+            const weatherElement = station?.WeatherElement;
+
+            const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
+            const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
+
+            //document.getElementById("heat-station-name").textContent = stationName;
+            //document.getElementById("heat-obs-time").textContent = String(obsTime).replace("T", " ");
+
+            if (tempRaw == null || humidityRaw == null) {
+                document.getElementById("heat-temperature").textContent = "--";
+                document.getElementById("heat-humidity").textContent = "--";
+                document.getElementById("heat-index-value").textContent = "--";
+                document.getElementById("heat-risk-level").textContent = "風險等級：--";
+                document.getElementById("heat-mapping-info").textContent = "表格對應：找不到 AirTemperature 或 RelativeHumidity 欄位";
+                document.getElementById("heat-box").className = "heat-main-box";
+                return;
+            }
+
+            const temp = Number(tempRaw);
+            const humidity = Number(humidityRaw);
+
+            if (Number.isNaN(temp) || Number.isNaN(humidity)) {
+                document.getElementById("heat-temperature").textContent = "--";
+                document.getElementById("heat-humidity").textContent = "--";
+                document.getElementById("heat-index-value").textContent = "--";
+                document.getElementById("heat-risk-level").textContent = "風險等級：--";
+                document.getElementById("heat-mapping-info").textContent = `表格對應：數值格式異常 temp=${tempRaw}, humidity=${humidityRaw}`;
+                document.getElementById("heat-box").className = "heat-main-box";
+                return;
+            }
+
+            const result = getHeatIndex(temp, humidity);
+            const risk = getRiskLevel(result.heatIndex);
+
+            document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
+            document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
+            document.getElementById("heat-index-value").textContent = `${result.heatIndex.toFixed(1)} °C`;
+            document.getElementById("heat-risk-level").textContent = `風險等級：${risk.text}`;
+            document.getElementById("heat-mapping-info").textContent =
+                `表格對應：溫度 ${temp.toFixed(1)} → ${result.mappedTemp.toFixed(1)} °C；濕度 ${humidity.toFixed(0)} → ${result.mappedHumidity} %`;
+
+            const heatBox = document.getElementById("heat-box");
+            heatBox.className = "heat-main-box";
+            if (risk.level > 0) {
+                heatBox.classList.add(`level-${risk.level}`);
+            }
+        }
+
+        async function fetchWeatherData() {
+            const loadingDiv = document.getElementById('loading');
+            const contentDiv = document.getElementById('content');
+            const errorDiv = document.getElementById('error-container');
+
+            loadingDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+            errorDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(API_URL, { cache: 'no-store' });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                console.log('完整 API 回應:', data);
+
+                if (!data.records || !data.records.Station || data.records.Station.length === 0) {
+                    throw new Error('找不到觀測站數據');
+                }
+
+                const station = data.records.Station[0];
+                console.log('Station 數據:', station);
+
+                updateDisplay(station);
+                updateHeatIndexDisplay(station);
+                updateRadarDisplay();
+
+                loadingDiv.style.display = 'none';
+                contentDiv.style.display = 'block';
+
+            } catch (error) {
+                console.error('錯誤:', error);
+                errorDiv.innerHTML = `
+                    <div class="error">
+                        ❌ 載入失敗: ${error.message}
+                        <br>
+                        <small>請檢查網路連接或稍後重試</small>
+                    </div>
+                `;
+                loadingDiv.style.display = 'none';
+                contentDiv.style.display = 'block';
+            }
+        }
+
+        function updateDisplay(station) {
+            document.getElementById('station-name').textContent = station.StationName || '--';
+            document.getElementById('station-id').textContent = `Station ID: ${station.StationId || '--'}`;
+            document.getElementById('station-code').textContent = station.StationId || '--';
+
+            const geoInfo = station.GeoInfo || {};
+            document.getElementById('county-name').textContent = geoInfo.CountyName || '--';
+            document.getElementById('town-name').textContent = geoInfo.TownName || '--';
+
+            const coordinates = geoInfo.Coordinates?.[0] || {};
+            const lat = coordinates.StationLatitude || '--';
+            const lon = coordinates.StationLongitude || '--';
+
+            document.getElementById('latitude').textContent = lat !== '--' ? lat : '--';
+            document.getElementById('longitude').textContent = lon !== '--' ? lon : '--';
+
+            const obsDateTime = getNestedValue(station, 'ObsTime.DateTime');
+            const formattedObsTime = formatDateTime(obsDateTime);
+            document.getElementById('obs-time-display').textContent = formattedObsTime;
+
+            const weather = station.WeatherElement || {};
+            console.log('WeatherElement:', weather);
+
+            const weatherDesc = weather.Weather || '--';
+            const emoji = getWeatherEmoji(weatherDesc);
+            document.getElementById('weather-desc').textContent = `${emoji} ${weatherDesc}`;
+
+            const temp = getNestedValue(weather, 'AirTemperature');
+            //document.getElementById('temp').textContent = temp;
+
+            const humidity = getNestedValue(weather, 'RelativeHumidity');
+            //document.getElementById('humidity').textContent = humidity;
+
+            const wind = getNestedValue(weather, 'WindSpeed');
+            document.getElementById('wind').textContent = wind;
+
+            const windDir = getNestedValue(weather, 'WindDirection');
+            document.getElementById('wind-dir').textContent = getWindDirection(windDir);
+
+            const pressure = getNestedValue(weather, 'AirPressure');
+            document.getElementById('pressure').textContent = pressure;
+
+            const visibility = weather.VisibilityDescription || '--';
+            document.getElementById('visibility').textContent = visibility;
+
+            const precipitation = getNestedValue(weather, 'Now.Precipitation');
+            document.getElementById('precipitation').textContent = precipitation;
+
+            //const sunshine = weather.SunshineDuration || '--';
+            //document.getElementById('sunshine').textContent = sunshine === '-99' ? '--' : sunshine;
+
+            const maxTemp = getNestedValue(weather, 'DailyExtreme.DailyHigh.TemperatureInfo.AirTemperature');
+            document.getElementById('max-temp').textContent = maxTemp;
+
+            const maxTempTime = getNestedValue(weather, 'DailyExtreme.DailyHigh.TemperatureInfo.Occurred_at.DateTime');
+            const formattedmaxTempTime = formatDateTime(maxTempTime)
+            document.getElementById('max-temp-time').textContent = formattedmaxTempTime;
+
+
+            const minTemp = getNestedValue(weather, 'DailyExtreme.DailyLow.TemperatureInfo.AirTemperature');
+            document.getElementById('min-temp').textContent = minTemp;
+
+            const minTempTime = getNestedValue(weather, 'DailyExtreme.DailyLow.TemperatureInfo.Occurred_at.DateTime');
+            const formattedminTempTime = formatDateTime(minTempTime)
+            document.getElementById('min-temp-time').textContent = formattedminTempTime;
+
+            const maxWind = getNestedValue(weather, 'GustInfo.PeakGustSpeed');
+            document.getElementById('max-wind-card').textContent = maxWind;
+            //document.getElementById('max-wind-detail').textContent = maxWind;
+
+            const now = new Date();
+            const pageUpdateTime = now.toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+        }
+//document.getElementById('update-time').textContent = pageUpdateTime;
+        function updateRadarDisplay() {
+            const radarImage = document.getElementById('radar-image');
+            radarImage.src = RADAR_IMAGE_URL + '?t=' + new Date().getTime();
+
+            const now = new Date();
+            const radarUpdateTime = now.toLocaleString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            document.getElementById('sidebar-radar-update-time').textContent = radarUpdateTime;
+            
+        }
+//document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
+        window.addEventListener('load', fetchWeatherData);
+
+        setInterval(fetchWeatherData, 10 * 60 * 1000);
+
+        setInterval(() => {
+            const radarImage = document.getElementById('radar-image');
+            if (radarImage) {
+                radarImage.src = RADAR_IMAGE_URL + '?t=' + new Date().getTime();
+
+                const now = new Date();
+                const radarUpdateTime = now.toLocaleString('zh-TW', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+
+                document.getElementById('sidebar-radar-update-time').textContent = radarUpdateTime;
+                
+            }
+        }, 1 * 60 * 1000);
+//document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
+
+
+
+
+loadRadarInfo().catch(err => {
+  console.error(err);
+  document.getElementById('radarTime').textContent = '讀取失敗';
+});
+
+setInterval(() => {
+  loadRadarInfo().catch(err => {
+    console.error(err);
+    document.getElementById('radarTime').textContent = '讀取失敗';
+  });
+}, 60 * 1000);
+    </script>
+</body>
+</html>
