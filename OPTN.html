@@ -526,6 +526,139 @@ body {
     color: var(--text-sub);
     font-size: 1.1em;
 }
+
+
+/* ============================================== */
+/* === 🌞 戶外模式(深色高對比)=== */
+/* ============================================== */
+body.outdoor-mode {
+    background: linear-gradient(135deg, #0f1e2e 0%, #1a3050 100%);
+}
+
+/* 卡片類:深底白字 */
+body.outdoor-mode .card,
+body.outdoor-mode .heat-index-container,
+body.outdoor-mode .details-container,
+body.outdoor-mode .history-container,
+body.outdoor-mode .radar-container,
+body.outdoor-mode .update-section {
+    background: #1a2940;
+    border-color: #3b82f6;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+
+body.outdoor-mode .card {
+    border-top-color: #60a5fa;
+    border-top-width: 4px;
+}
+
+/* 標題類:亮藍 */
+body.outdoor-mode .card-title,
+body.outdoor-mode .heat-index-title,
+body.outdoor-mode .details-title,
+body.outdoor-mode .history-title,
+body.outdoor-mode .radar-title,
+body.outdoor-mode .radar-info-label {
+    color: #60a5fa;
+    opacity: 1;
+}
+
+/* 主要數值:純白粗體 */
+body.outdoor-mode .card-value,
+body.outdoor-mode .detail-value,
+body.outdoor-mode #heat-temperature,
+body.outdoor-mode #heat-humidity {
+    color: #ffffff;
+    font-weight: 900;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* 副標籤:略亮灰 */
+body.outdoor-mode .card-unit,
+body.outdoor-mode .detail-label,
+body.outdoor-mode .update-time,
+body.outdoor-mode .radar-info-item {
+    color: #cbd5e1;
+}
+
+/* 詳細數據小卡片 */
+body.outdoor-mode .detail-item {
+    background: #0f172a;
+    border-left-color: #60a5fa;
+}
+
+/* 站點橫條 */
+body.outdoor-mode .station-bar {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+
+body.outdoor-mode .station-bar-label {
+    opacity: 1;
+    color: #bfdbfe;
+}
+
+/* 雷達區塊 */
+body.outdoor-mode .radar-image-wrapper {
+    background: #0f172a;
+}
+
+body.outdoor-mode .radar-info {
+    border-bottom-color: #3b82f6;
+}
+
+/* 按鈕 */
+body.outdoor-mode .refresh-btn {
+    background: #1a2940;
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+body.outdoor-mode .refresh-btn:hover {
+    background: #60a5fa;
+    color: #0f1e2e;
+}
+
+/* 歷史紀錄區 */
+body.outdoor-mode .history-stat-label {
+    color: #cbd5e1;
+}
+
+body.outdoor-mode .history-stat-value {
+    color: #ffffff;
+}
+
+body.outdoor-mode .history-stat.heat .history-stat-value {
+    color: #f87171;
+}
+
+body.outdoor-mode .history-clear-btn {
+    background: #1a2940;
+    color: #f87171;
+    border-color: #f87171;
+}
+
+body.outdoor-mode .history-clear-btn:hover {
+    background: #f87171;
+    color: #1a2940;
+}
+
+body.outdoor-mode .history-empty {
+    color: #cbd5e1;
+}
+
+/* 熱指數框 - 在戶外模式中加強光暈 */
+body.outdoor-mode .heat-main-box {
+    box-shadow: 0 0 30px rgba(255, 165, 0, 0.4), 0 6px 18px rgba(0,0,0,0.5);
+}
+
+/* 載入畫面 */
+body.outdoor-mode .loading {
+    color: #60a5fa;
+}
+
+
+
  </style>
 </head>
 
@@ -692,6 +825,7 @@ body {
     <div class="update-time">
         📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
     </div>
+    <button class="refresh-btn" onclick="toggleOutdoorMode()" id="outdoor-btn">🌞 戶外模式</button>
     <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
     <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
 </div>
@@ -1313,6 +1447,32 @@ setInterval(() => {
   });
 }, 60 * 1000);
 
+
+// === 🌞 戶外模式切換 ===
+function toggleOutdoorMode() {
+    const isOutdoor = document.body.classList.toggle('outdoor-mode');
+    localStorage.setItem('outdoor-mode', isOutdoor);
+    
+    const btn = document.getElementById('outdoor-btn');
+    if (btn) btn.textContent = isOutdoor ? '☀️ 室內模式' : '🌞 戶外模式';
+    
+    // 切換後重新繪製圖表(因為背景色變了)
+    if (typeof renderHistoryChart === 'function') {
+        setTimeout(renderHistoryChart, 100);
+    }
+}
+
+// 頁面載入時還原使用者上次設定
+(function restoreOutdoorMode() {
+    if (localStorage.getItem('outdoor-mode') === 'true') {
+        document.body.classList.add('outdoor-mode');
+        // 等按鈕載入後再改文字
+        window.addEventListener('load', () => {
+            const btn = document.getElementById('outdoor-btn');
+            if (btn) btn.textContent = '☀️ 室內模式';
+        });
+    }
+})();
 
     </script>
 </body>
