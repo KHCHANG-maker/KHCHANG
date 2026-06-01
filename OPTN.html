@@ -549,7 +549,6 @@ body.outdoor-mode .update-section {
 
 body.outdoor-mode .card {
     border-top-color: #60a5fa;
-    border-top-width: 4px;
 }
 
 /* 標題類:亮藍 */
@@ -563,14 +562,20 @@ body.outdoor-mode .radar-info-label {
     opacity: 1;
 }
 
-/* 主要數值:純白粗體 */
+/* 主要數值:純白粗體(主要卡片用)*/
 body.outdoor-mode .card-value,
-body.outdoor-mode .detail-value,
 body.outdoor-mode #heat-temperature,
 body.outdoor-mode #heat-humidity {
     color: #ffffff;
     font-weight: 900;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* 詳細數據用一般粗體即可,避免擠成兩行 */
+body.outdoor-mode .detail-value {
+    color: #ffffff;
+    font-weight: bold;
+    /* 移除 text-shadow,避免字寬變化 */
 }
 
 /* 副標籤:略亮灰 */
