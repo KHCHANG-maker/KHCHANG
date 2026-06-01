@@ -782,7 +782,8 @@ body.outdoor-mode .loading {
 <!-- 📈 內嵌歷史趨勢圖 -->
 <div class="history-container">
    <div class="history-header">
-    <div class="history-title">📈 過去 24 小時溫度與熱指數趨勢</div>
+    <div class="history-title">📈 過去 24 小時溫度與熱指數趨勢 <span id="hist-station" style="opacity:0.7; font-weight:normal;"></span>
+</div>
     <div class="history-stats">
         <span class="history-stat heat">
             <span class="history-stat-label">最高熱指數:</span>
@@ -859,20 +860,30 @@ body.outdoor-mode .loading {
 </div>
 
 <script>
-// === 歷史資料儲存與圖表(內嵌版)===
-const HISTORY_KEY = 'weather_history_data';
+// === 歷史資料儲存與圖表(內嵌版,多站獨立)===
 const HOURS_24_MS = 24 * 60 * 60 * 1000;
 let historyChart = null;
+
+// 🆕 動態取得 key:不同站點不會互相覆蓋
+function getHistoryKey() {
+    const stationCode = document.getElementById('station-code')?.textContent?.trim();
+    if (stationCode && stationCode !== '--' && stationCode !== '') {
+        return `weather_history_${stationCode}`;
+    }
+    const filename = window.location.pathname.split('/').pop().replace('.html', '').replace(/\s+/g, '_');
+    return `weather_history_${filename || 'default'}`;
+}
 
 function saveToHistory(temperature, heatIndex) {
     const temp = parseFloat(temperature);
     const heat = parseFloat(heatIndex);
     if (isNaN(temp) && isNaN(heat)) return;
 
+    const key = getHistoryKey();
     const now = Date.now();
     let data = [];
     try {
-        data = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        data = JSON.parse(localStorage.getItem(key) || '[]');
     } catch (e) { data = []; }
 
     if (data.length > 0 && now - data[data.length - 1].time < 5 * 60 * 1000) {
@@ -884,21 +895,26 @@ function saveToHistory(temperature, heatIndex) {
     const cutoff = now - HOURS_24_MS;
     data = data.filter(d => d.time >= cutoff);
 
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(data));
-    renderHistoryChart();   // ⭐ 存完立即更新圖表
+    localStorage.setItem(key, JSON.stringify(data));
+    renderHistoryChart();
 }
 
 function clearHistory() {
-    if (confirm('確定要清除所有歷史記錄嗎?')) {
-        localStorage.removeItem(HISTORY_KEY);
+    if (confirm('確定要清除此站點的所有歷史記錄嗎?')) {
+        localStorage.removeItem(getHistoryKey());
         renderHistoryChart();
     }
 }
 
 function renderHistoryChart() {
+    // 🆕 加在這裡(最開頭)
+    const stationName = document.getElementById('station-name')?.textContent?.trim() || '';
+    const histStation = document.getElementById('hist-station');
+    if (histStation) histStation.textContent = stationName ? `(${stationName})` : '';
+
     let data = [];
     try {
-        data = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        data = JSON.parse(localStorage.getItem(getHistoryKey()) || '[]');
     } catch (e) { data = []; }
 
     const wrapper = document.querySelector('.history-chart-wrapper');
@@ -908,9 +924,7 @@ function renderHistoryChart() {
     };
 
     if (data.length === 0) {
-        wrapper.innerHTML = '<div class="history-empty">📭 尚無歷史資料 — 每次刷新後會自動記錄,稍後即可看到趨勢曲線</div>';
-        setStat('hist-max-temp', '--');
-        setStat('hist-min-temp', '--');
+        wrapper.innerHTML = '<div class="history-empty">📭 此站點尚無歷史資料 — 每次刷新後會自動記錄,稍後即可看到趨勢曲線</div>';
         setStat('hist-max-heat', '--');
         return;
     }
@@ -928,10 +942,7 @@ function renderHistoryChart() {
     const tempData = data.map(d => isNaN(d.temp) ? null : d.temp);
     const heatData = data.map(d => isNaN(d.heat) ? null : d.heat);
 
-    const validTemps = tempData.filter(t => t !== null);
     const validHeats = heatData.filter(t => t !== null);
-    setStat('hist-max-temp', validTemps.length ? Math.max(...validTemps).toFixed(1) + ' °C' : '--');
-    setStat('hist-min-temp', validTemps.length ? Math.min(...validTemps).toFixed(1) + ' °C' : '--');
     setStat('hist-max-heat', validHeats.length ? Math.max(...validHeats).toFixed(1) + ' °C' : '--');
 
     if (historyChart) historyChart.destroy();
@@ -947,22 +958,16 @@ function renderHistoryChart() {
                     data: tempData,
                     borderColor: '#4DA6D6',
                     backgroundColor: 'rgba(77, 166, 214, 0.15)',
-                    tension: 0.3,
-                    fill: true,
-                    pointRadius: 2,
-                    pointHoverRadius: 5,
-                    borderWidth: 2
+                    tension: 0.3, fill: true,
+                    pointRadius: 2, pointHoverRadius: 5, borderWidth: 2
                 },
                 {
                     label: '🔥 熱指數',
                     data: heatData,
                     borderColor: '#dc2626',
                     backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                    tension: 0.3,
-                    fill: true,
-                    pointRadius: 2,
-                    pointHoverRadius: 5,
-                    borderWidth: 2
+                    tension: 0.3, fill: true,
+                    pointRadius: 2, pointHoverRadius: 5, borderWidth: 2
                 }
             ]
         },
@@ -972,35 +977,28 @@ function renderHistoryChart() {
             interaction: { mode: 'index', intersect: false },
             plugins: {
                 legend: {
-                    position: 'top',
-                    align: 'end',
+                    position: 'top', align: 'end',
                     labels: { font: { size: 11, weight: 'bold' }, boxWidth: 14, padding: 8 }
                 },
                 tooltip: {
                     backgroundColor: 'rgba(30, 90, 150, 0.95)',
                     padding: 10,
-                    titleFont: { size: 12 },
-                    bodyFont: { size: 12 }
+                    titleFont: { size: 12 }, bodyFont: { size: 12 }
                 }
             },
             scales: {
-                y: {
-                    grid: { color: 'rgba(0,0,0,0.05)' },
-                    ticks: { font: { size: 10 } }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { size: 10 }, maxTicksLimit: 10 }
-                }
+                y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } }
             }
         }
     });
 }
 
-// 頁面載入時就渲染一次圖表
 window.addEventListener('load', () => {
     setTimeout(renderHistoryChart, 500);
 });
+
+
 </script>
 </body>
 </html>
@@ -1475,5 +1473,3 @@ function toggleOutdoorMode() {
 })();
 
     </script>
-</body>
-</html>
