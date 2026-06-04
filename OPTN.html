@@ -470,35 +470,235 @@ body {
     font-size: 1.2em;
 }
 
-/* 響應式 */
-@media (max-width: 1280px), (max-height: 650px) {
+/* ============================================ */
+/* === 📱 平板(寬 ≤ 1024px)=== */
+/* ============================================ */
+@media (max-width: 1024px) {
     html, body {
         overflow: auto;
         height: auto;
     }
+    
+    body {
+        padding: 8px;
+    }
+    
     .main-layout {
         height: auto;
         grid-template-columns: 1fr;
+        gap: 10px;
     }
+    
+    .left-col {
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+    }
+    
     .radar-image-wrapper {
-        min-height: 500px;
+        min-height: 450px;
     }
 }
 
+/* ============================================ */
+/* === 📱 手機(寬 ≤ 768px)=== */
+/* ============================================ */
 @media (max-width: 768px) {
-    .station-bar {
-        grid-template-columns: 1fr;
-        gap: 10px;
+    body {
+        padding: 6px;
     }
+    
+    /* 站點橫條:改成 2 欄 */
+    .station-bar {
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+    
     .station-bar-block {
         border-left: none;
         padding-left: 0;
-        border-top: 1px solid rgba(255,255,255,0.3);
+        border-top: 1px solid rgba(255,255,255,0.25);
         padding-top: 8px;
+        grid-column: span 2;
     }
-    .station-bar-block:first-child { border-top: none; padding-top: 0; }
-    .dashboard { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-    .detail-row { grid-template-columns: repeat(2, 1fr); }
+    
+    .station-bar-block:first-child,
+    .station-bar-main {
+        border-top: none;
+        padding-top: 0;
+        grid-column: span 2;
+    }
+    
+    .station-bar-icon {
+        grid-column: 1;
+        font-size: 1.4em;
+    }
+    
+    .station-bar-main {
+        grid-column: 2;
+        text-align: left;
+    }
+    
+    .station-bar-main .station-bar-value {
+        font-size: 1.2em;
+    }
+    
+    /* 9 張卡片改 2 欄(更易讀)*/
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .card {
+        padding: 10px 8px;
+    }
+    
+    .card-value {
+        font-size: 1.6em;
+    }
+    
+    /* 熱指數:改成上下排列 */
+    .heat-main-box {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 14px;
+        text-align: center;
+    }
+    
+    .heat-main-left {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        padding-right: 0;
+        padding-bottom: 10px;
+    }
+    
+    .heat-main-value {
+        font-size: 2em;
+    }
+    
+    .heat-main-meta {
+        font-size: 0.9em;
+        text-align: center;
+    }
+    
+    /* 詳細數據:改 2 欄 */
+    .detail-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .detail-item {
+        padding: 8px 10px;
+    }
+    
+    .detail-value {
+        font-size: 0.95em;
+    }
+    
+    /* 雷達資訊:改成 1 欄 */
+    .radar-info {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        font-size: 0.85em;
+    }
+    
+    .radar-image-wrapper {
+        min-height: 350px;
+    }
+    
+    /* 歷史圖表 */
+    .history-container {
+        min-height: 280px;
+    }
+    
+    .history-chart-wrapper {
+        min-height: 220px;
+    }
+    
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .history-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* 底部按鈕:改成多行排列 */
+    .update-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .update-time {
+        text-align: center;
+    }
+    
+    .refresh-btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    /* 標題字大小 */
+    .heat-index-title,
+    .details-title,
+    .history-title,
+    .radar-title {
+        font-size: 1em;
+    }
+}
+
+/* ============================================ */
+/* === 📱 小手機(寬 ≤ 480px)=== */
+/* ============================================ */
+@media (max-width: 480px) {
+    /* 9 張卡片改回 1 欄太佔空間,維持 2 欄,但縮小 */
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    
+    .card-title {
+        font-size: 0.78em;
+    }
+    
+    .card-value {
+        font-size: 1.4em;
+    }
+    
+    .card-unit {
+        font-size: 0.75em;
+    }
+    
+    /* 詳細數據改 1 欄(時間欄位太長)*/
+    .detail-row {
+        grid-template-columns: 1fr;
+    }
+    
+    /* 雷達圖小一點 */
+    .radar-image-wrapper {
+        min-height: 280px;
+    }
+    
+    /* 站點橫條更精簡 */
+    .station-bar-label {
+        font-size: 0.65em;
+    }
+    
+    .station-bar-value {
+        font-size: 0.9em;
+    }
+    
+    /* 熱指數數字 */
+    .heat-main-value {
+        font-size: 1.7em;
+    }
 }
 
 /* === 歷史趨勢 Modal === */
@@ -1077,14 +1277,19 @@ async function loadRadarInfo() {
             return '🌤️';
         }
 
-        function getNestedValue(obj, path, defaultValue = '--') {
-            try {
-                const value = path.split('.').reduce((current, prop) => current?.[prop], obj);
-                return value !== undefined && value !== null && value !== '-99' ? value : defaultValue;
-            } catch (e) {
-                return defaultValue;
-            }
-        }
+function getNestedValue(obj, path, defaultValue = '--') {
+    try {
+        const value = path.split('.').reduce((current, prop) => current?.[prop], obj);
+        // 過濾無效值:null/undefined/-99(字串或數字)/NaN
+        if (value === undefined || value === null) return defaultValue;
+        if (value === '-99' || value === -99) return defaultValue;
+        const num = parseFloat(value);
+        if (!isNaN(num) && num <= -90) return defaultValue;  // 任何 -90 以下都視為無效
+        return value;
+    } catch (e) {
+        return defaultValue;
+    }
+}
 
         function formatDateTime(dateTimeString) {
             if (!dateTimeString || dateTimeString === '--') return '--';
@@ -1230,15 +1435,16 @@ async function loadRadarInfo() {
             const temp = Number(tempRaw);
             const humidity = Number(humidityRaw);
 
-            if (Number.isNaN(temp) || Number.isNaN(humidity)) {
-                document.getElementById("heat-temperature").textContent = "--";
-                document.getElementById("heat-humidity").textContent = "--";
-                document.getElementById("heat-index-value").textContent = "--";
-                document.getElementById("heat-risk-level").textContent = "風險等級：--";
-                document.getElementById("heat-mapping-info").textContent = `表格對應：數值格式異常 temp=${tempRaw}, humidity=${humidityRaw}`;
-                document.getElementById("heat-box").className = "heat-main-box";
-                return;
-            }
+// 🆕 加入 -99 判斷:儀器調校中
+if (Number.isNaN(temp) || Number.isNaN(humidity) || temp <= -90 || humidity <= -90) {
+    document.getElementById("heat-temperature").textContent = "儀器調校中";
+    document.getElementById("heat-humidity").textContent = "儀器調校中";
+    document.getElementById("heat-index-value").textContent = "--";
+    document.getElementById("heat-risk-level").textContent = "風險等級:儀器調校中";
+    document.getElementById("heat-mapping-info").textContent = "表格對應:儀器調校中,暫無資料";
+    document.getElementById("heat-box").className = "heat-main-box";
+    return;
+}
 
             const result = getHeatIndex(temp, humidity);
             const risk = getRiskLevel(result.heatIndex);
@@ -1290,9 +1496,12 @@ async function loadRadarInfo() {
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
                 
-                const currentTemp = document.getElementById('heat-temperature').textContent;
+// 🆕 只在資料正常時才存歷史(避免儀器調校中的無效值汙染圖表)
+const currentTemp = document.getElementById('heat-temperature').textContent;
 const currentHeat = document.getElementById('heat-index-value').textContent;
-saveToHistory(currentTemp, currentHeat);
+if (currentTemp !== '儀器調校中' && currentTemp !== '--' && currentHeat !== '--') {
+    saveToHistory(currentTemp, currentHeat);
+}
 
             } catch (error) {
                 console.error('錯誤:', error);
@@ -1478,3 +1687,4 @@ function toggleOutdoorMode() {
 })();
 
     </script>
+
