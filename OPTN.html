@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -449,8 +450,18 @@ body {
     align-items: center;
     background: var(--bg-light);
     border-radius: 10px;
-    overflow: hidden;
+    overflow: hidden;          /* 重要:超出範圍隱藏 */
     padding: 6px;
+    position: relative;        /* 🆕 給縮放提示用 */
+    cursor: zoom-in;           /* 🆕 滑鼠變放大鏡 */
+}
+
+.radar-image-wrapper.zoomed {
+    cursor: grab;              /* 放大後變成可拖曳 */
+}
+
+.radar-image-wrapper.dragging {
+    cursor: grabbing;
 }
 
 .radar-image {
@@ -461,6 +472,41 @@ body {
     object-fit: contain;
     display: block;
     border-radius: 8px;
+    transition: transform 0.15s ease-out;  /* 🆕 平滑縮放動畫 */
+    transform-origin: center center;
+    user-select: none;         /* 拖曳時不選取圖片 */
+    -webkit-user-drag: none;   /* 不要觸發系統拖曳 */
+}
+
+/* 縮放提示(右上角)*/
+.radar-zoom-hint {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(30, 90, 150, 0.85);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 5;
+}
+
+.radar-image-wrapper:hover .radar-zoom-hint {
+    opacity: 1;
+}
+
+.radar-image-wrapper.zoomed .radar-zoom-hint {
+    opacity: 1;
+    background: rgba(220, 38, 38, 0.85);
+}
+
+/* 戶外模式適配 */
+body.outdoor-mode .radar-zoom-hint {
+    background: rgba(96, 165, 250, 0.9);
+    color: #0f1e2e;
 }
 
 .loading {
@@ -1054,11 +1100,12 @@ body.outdoor-mode .loading {
                     <span>--</span>
                 </div>
             </div>
-            <div class="radar-image-wrapper">
-                <img id="radar-image" class="radar-image"
-                     src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png"
-                     alt="林園雷達回波圖" onerror="handleRadarImageError()">
-            </div>
+<div class="radar-image-wrapper" id="radar-wrapper">
+    <div class="radar-zoom-hint" id="radar-zoom-hint">🔍 滾輪縮放 · 拖曳移動 · 雙擊還原</div>
+    <img id="radar-image" class="radar-image"
+         src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png"
+         alt="林園雷達回波圖" onerror="handleRadarImageError()">
+</div>
         </div>
 
     </div>
@@ -1684,6 +1731,104 @@ function toggleOutdoorMode() {
             if (btn) btn.textContent = '☀️ 室內模式';
         });
     }
+})();
+
+
+// === 🔍 雷達圖縮放功能 ===
+(function setupRadarZoom() {
+    const wrapper = document.getElementById('radar-wrapper');
+    const img = document.getElementById('radar-image');
+    const hint = document.getElementById('radar-zoom-hint');
+    if (!wrapper || !img) return;
+
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let startTransX = 0, startTransY = 0;
+
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 5;
+    const ZOOM_SPEED = 0.2;
+
+    function applyTransform() {
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        if (scale > 1) {
+            wrapper.classList.add('zoomed');
+            if (hint) hint.textContent = `🔍 ${scale.toFixed(1)}x · 雙擊還原`;
+        } else {
+            wrapper.classList.remove('zoomed');
+            if (hint) hint.textContent = '🔍 滾輪縮放 · 拖曳移動 · 雙擊還原';
+        }
+    }
+
+    function reset() {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        applyTransform();
+    }
+
+    // 滾輪縮放(以滑鼠位置為中心)
+    wrapper.addEventListener('wheel', (e) => {
+        e.preventDefault();
+
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - rect.width / 2;
+        const mouseY = e.clientY - rect.top - rect.height / 2;
+
+        const delta = e.deltaY < 0 ? ZOOM_SPEED : -ZOOM_SPEED;
+        const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
+
+        if (newScale === scale) return;
+
+        // 以滑鼠位置為中心縮放
+        const scaleRatio = newScale / scale;
+        translateX = mouseX - (mouseX - translateX) * scaleRatio;
+        translateY = mouseY - (mouseY - translateY) * scaleRatio;
+        scale = newScale;
+
+        // 縮回原本大小時自動置中
+        if (scale === 1) {
+            translateX = 0;
+            translateY = 0;
+        }
+
+        applyTransform();
+    }, { passive: false });
+
+    // 拖曳開始
+    wrapper.addEventListener('mousedown', (e) => {
+        if (scale <= 1) return;
+        isDragging = true;
+        wrapper.classList.add('dragging');
+        startX = e.clientX;
+        startY = e.clientY;
+        startTransX = translateX;
+        startTransY = translateY;
+        img.style.transition = 'none';
+        e.preventDefault();
+    });
+
+    // 拖曳移動(綁在 document 上,即使滑出 wrapper 也能繼續拖)
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translateX = startTransX + (e.clientX - startX);
+        translateY = startTransY + (e.clientY - startY);
+        applyTransform();
+    });
+
+    // 拖曳結束
+    document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        wrapper.classList.remove('dragging');
+        img.style.transition = 'transform 0.15s ease-out';
+    });
+
+    // 雙擊還原
+    wrapper.addEventListener('dblclick', reset);
 })();
 
     </script>
