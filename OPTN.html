@@ -1572,9 +1572,14 @@ function getHeatIndex(temp, humidity) {
                 
 // 🆕 只在資料正常時才存歷史(避免儀器調校中的無效值汙染圖表)
 const currentTemp = document.getElementById('heat-temperature').textContent;
-const currentHeat = document.getElementById('heat-index-value').textContent;
-if (currentTemp !== '儀器調校中' && currentTemp !== '--' && 
-    currentHeat !== '--' && currentHeat !== '未達風險') {
+let currentHeat = document.getElementById('heat-index-value').textContent;
+
+// 「未達風險」時,熱指數 = 溫度(讓圖表連續)
+if (currentHeat === '未達風險' && currentTemp !== '儀器調校中' && currentTemp !== '--') {
+    currentHeat = currentTemp;
+}
+
+if (currentTemp !== '儀器調校中' && currentTemp !== '--' && currentHeat !== '--') {
     saveToHistory(currentTemp, currentHeat);
 }
 
