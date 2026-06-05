@@ -15,274 +15,435 @@
             --primary: #4DA6D6;
             --primary-dark: #1e5a96;
             --primary-light: #87CEEB;
+            --bg-light: #f0f8ff;
+        }
+
+        html, body {
+            min-height: 100vh;
         }
 
         body {
-            font-family: 'Microsoft YaHei', Arial, sans-serif;
-            background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
-            min-height: 100vh;
+            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #5DADE2 0%, #87CEEB 50%, #E0F6FF 100%);
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 30px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 背景動態氣泡裝飾 */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        body::before {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            right: -100px;
+        }
+
+        body::after {
+            width: 400px;
+            height: 400px;
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
         }
 
         .container {
             text-align: center;
-            max-width: 1200px;
+            max-width: 1100px;
             width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* === Header 區塊 === */
+        .header {
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo-icon {
+            display: inline-block;
+            font-size: 70px;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+            animation: sunRotate 20s linear infinite;
+        }
+
+        @keyframes sunRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         h1 {
             color: white;
-            font-size: 48px;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 44px;
+            font-weight: 800;
+            margin-bottom: 12px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25);
+            letter-spacing: 1px;
         }
 
         .subtitle {
             color: rgba(255, 255, 255, 0.95);
-            font-size: 18px;
-            margin-bottom: 40px;
+            font-size: 17px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
         }
 
-        /* === 區塊標題 === */
-        .section-title {
-            color: white;
-            font-size: 22px;
-            font-weight: bold;
-            margin: 30px 0 20px;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.25);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .section-title::before,
-        .section-title::after {
-            content: "";
-            flex: 0 1 80px;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.5);
-        }
-
-        /* === 廠區卡片(原本的)=== */
-        .cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .card {
+        .subtitle-divider {
+            width: 60px;
+            height: 3px;
             background: white;
-            border-radius: 15px;
-            padding: 35px 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin: 18px auto 0;
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        /* === 廠區卡片(主視覺)=== */
+        .factory-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .factory-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 35px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             color: #333;
-            border-top: 5px solid var(--primary);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out;
+            cursor: pointer;
         }
 
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+        .factory-card:nth-child(1) { animation-delay: 0.2s; animation-fill-mode: backwards; }
+        .factory-card:nth-child(2) { animation-delay: 0.4s; animation-fill-mode: backwards; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        .card-icon {
-            font-size: 55px;
-            margin-bottom: 18px;
+        /* 卡片頂部色帶 */
+        .factory-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
         }
 
-        .card-title {
-            font-size: 26px;
-            font-weight: bold;
-            margin-bottom: 12px;
+        /* 背景裝飾圖案 */
+        .factory-card::after {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(77, 166, 214, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            transition: all 0.4s ease;
+        }
+
+        .factory-card:hover {
+            transform: translateY(-12px);
+            box-shadow: 0 25px 55px rgba(30, 90, 150, 0.3);
+        }
+
+        .factory-card:hover::after {
+            transform: scale(1.5);
+        }
+
+        /* 廠區徽章 */
+        .factory-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-light);
             color: var(--primary-dark);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
         }
 
-        .card-description {
+        .factory-icon {
+            font-size: 70px;
+            margin-bottom: 18px;
+            position: relative;
+            z-index: 1;
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        .factory-name {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .factory-location {
             font-size: 14px;
             color: #666;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
         }
 
-        .card-link {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            padding: 11px 28px;
-            border-radius: 25px;
-            text-decoration: none;
-            font-weight: bold;
-            transition: opacity 0.3s ease, transform 0.2s ease;
+        /* 站點資訊 */
+        .factory-info {
+            display: flex;
+            justify-content: space-around;
+            padding: 18px 0;
+            border-top: 1px solid #e8f1f8;
+            border-bottom: 1px solid #e8f1f8;
+            margin-bottom: 22px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .info-item {
+            text-align: center;
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
             font-size: 14px;
-        }
-
-        .card-link:hover {
-            opacity: 0.9;
-            transform: scale(1.03);
-        }
-
-        /* === 一頁式儀表板區(獨立樣式)=== */
-        .dashboard-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin-top: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-            border-left: 6px solid var(--primary);
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .dashboard-card {
-            background: linear-gradient(135deg, #f0f8ff 0%, #ffffff 100%);
-            border: 2px solid var(--primary-light);
-            border-radius: 12px;
-            padding: 18px 20px;
-            text-decoration: none;
             color: var(--primary-dark);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            text-align: left;
-        }
-
-        .dashboard-card:hover {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            transform: translateX(5px);
-            box-shadow: 0 6px 20px rgba(77, 166, 214, 0.4);
-            border-color: var(--primary-dark);
-        }
-
-        .dashboard-card-icon {
-            font-size: 32px;
-            flex-shrink: 0;
-        }
-
-        .dashboard-card-content {
-            flex: 1;
-        }
-
-        .dashboard-card-title {
-            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 3px;
         }
 
-        .dashboard-card-desc {
-            font-size: 12px;
-            opacity: 0.85;
-        }
-
-        .dashboard-card-arrow {
-            font-size: 20px;
-            opacity: 0.7;
-            flex-shrink: 0;
-        }
-
-        .dashboard-section-title {
-            color: var(--primary-dark);
-            font-size: 22px;
-            font-weight: bold;
-            display: flex;
+        /* 進入按鈕 */
+        .factory-button {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 13px 32px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(77, 166, 214, 0.4);
+            position: relative;
+            z-index: 1;
         }
 
-        .dashboard-section-desc {
-            color: #666;
-            font-size: 14px;
-            line-height: 1.5;
+        .factory-card:hover .factory-button {
+            box-shadow: 0 10px 25px rgba(30, 90, 150, 0.5);
+            transform: scale(1.04);
         }
 
+        .factory-button .arrow {
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .factory-card:hover .arrow {
+            transform: translateX(4px);
+        }
+
+        /* === 功能特色說明 === */
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            animation: fadeInUp 1s ease-out 0.6s backwards;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 18px;
+            border-radius: 25px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* === Footer === */
         .footer {
-            margin-top: 50px;
+            margin-top: 30px;
             color: rgba(255, 255, 255, 0.85);
-            font-size: 14px;
+            font-size: 13px;
+            animation: fadeInUp 1s ease-out 0.8s backwards;
         }
 
-        @media (max-width: 600px) {
+        .footer p {
+            margin: 4px 0;
+        }
+
+        /* === 響應式 === */
+        @media (max-width: 768px) {
             h1 { font-size: 32px; }
-            .card { padding: 25px 20px; }
-            .card-icon { font-size: 45px; }
-            .card-title { font-size: 22px; }
+            .logo-icon { font-size: 55px; }
+            .subtitle { font-size: 15px; }
+            
+            .factory-cards {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .factory-card {
+                padding: 30px 25px;
+            }
+            
+            .factory-name { font-size: 26px; }
+            .factory-icon { font-size: 55px; }
+            
+            .features {
+                gap: 10px;
+            }
+            
+            .feature-item {
+                font-size: 12px;
+                padding: 6px 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .factory-info {
+                flex-direction: column;
+                gap: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🌞 戶外作業天氣監測系統</h1>
-        <p class="subtitle">選擇您要訪問的廠區或檢視即時儀表板</p>
 
-        <!-- === 廠區選擇 === -->
-        <div class="section-title">🏭 廠區選擇</div>
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-icon">🌞</div>
+            <h1>戶外作業天氣監測系統</h1>
+            <p class="subtitle">即時掌握廠區天氣狀況 · 守護戶外作業人員安全</p>
+            <div class="subtitle-divider"></div>
+        </div>
 
-        <div class="cards">
+        <!-- 廠區卡片 -->
+        <div class="factory-cards">
+
             <!-- 台南廠 -->
-            <a href="CorningTN.html" class="card">
-                <div class="card-icon">🏢</div>
-                <div class="card-title">台南廠</div>
-                <div class="card-description">台灣南部廠區<br>即時天氣監測</div>
-                <span class="card-link">進入台南廠 →</span>
+            <a href="OPTN.html" class="factory-card">
+                <div class="factory-badge">🏭 南部廠區</div>
+                <div class="factory-icon">🏢</div>
+                <h2 class="factory-name">台南廠</h2>
+                <div class="factory-location">📍 臺南市善化區</div>
+
+                <div class="factory-info">
+                    <div class="info-item">
+                        <div class="info-label">觀測站</div>
+                        <div class="info-value">國三 S342K</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">站點代碼</div>
+                        <div class="info-value">CAN090</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">雷達</div>
+                        <div class="info-value">林園雷達</div>
+                    </div>
+                </div>
+
+                <div class="factory-button">
+                    進入監測儀表板 <span class="arrow">→</span>
+                </div>
             </a>
 
             <!-- 台中廠 -->
-            <a href="CorningTC.html" class="card">
-                <div class="card-icon">🏢</div>
-                <div class="card-title">台中廠</div>
-                <div class="card-description">台灣中部廠區<br>即時天氣監測</div>
-                <span class="card-link">進入台中廠 →</span>
+            <a href="OPTC.html" class="factory-card">
+                <div class="factory-badge">🏭 中部廠區</div>
+                <div class="factory-icon">🏢</div>
+                <h2 class="factory-name">台中廠</h2>
+                <div class="factory-location">📍 臺中市西屯區</div>
+
+                <div class="factory-info">
+                    <div class="info-item">
+                        <div class="info-label">觀測站</div>
+                        <div class="info-value">西屯</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">站點代碼</div>
+                        <div class="info-value">C0F9T0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">雷達</div>
+                        <div class="info-value">南屯雷達</div>
+                    </div>
+                </div>
+
+                <div class="factory-button">
+                    進入監測儀表板 <span class="arrow">→</span>
+                </div>
             </a>
+
         </div>
 
-        <!-- === 一頁式儀表板區 === -->
-        <div class="dashboard-section">
-            <div class="dashboard-section-title">
-                📊 即時氣象儀表板
-            </div>
-            <div class="dashboard-section-desc">
-                一頁式即時資訊頁面 — 適合大螢幕監控顯示,完整顯示氣象資料、熱指數與雷達回波圖
-            </div>
-
-            <div class="dashboard-grid">
-                <!-- 台南廠儀表板 -->
-                <a href="OPTN.html" class="dashboard-card">
-                    <div class="dashboard-card-icon">📡</div>
-                    <div class="dashboard-card-content">
-                        <div class="dashboard-card-title">台南廠</div>
-                        <div class="dashboard-card-desc">善化區 CAN090</div>
-                    </div>
-                    <div class="dashboard-card-arrow">→</div>
-                </a>
-
-                <!-- 台中廠儀表板(預留)-->
-                <a href="OPTC.html" class="dashboard-card">
-                    <div class="dashboard-card-icon">📡</div>
-                    <div class="dashboard-card-content">
-                        <div class="dashboard-card-title">台中廠</div>
-                        <div class="dashboard-card-desc">西屯 C0F9T0</div>
-                    </div>
-                    <div class="dashboard-card-arrow">→</div>
-                </a>
-            </div>
+        <!-- 功能特色 -->
+        <div class="features">
+            <div class="feature-item">🌡️ 即時溫濕度</div>
+            <div class="feature-item">🔥 熱指數評估</div>
+            <div class="feature-item">📈 24 小時趨勢</div>
+            <div class="feature-item">🛰️ 雷達回波圖</div>
+            <div class="feature-item">🌞 戶外模式</div>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
-            <p>© 2026 康寧台灣. 版權所有</p>
+            <p>© 2026 康寧台灣 · 戶外作業安全監測</p>
+            <p style="opacity: 0.7;">資料來源：中央氣象署開放資料平台</p>
         </div>
+
     </div>
 </body>
 </html>
