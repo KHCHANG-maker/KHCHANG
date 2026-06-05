@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -1377,37 +1376,48 @@ function getNestedValue(obj, path, defaultValue = '--') {
             return levels[levels.length - 1];
         }
 
-        function getHeatIndex(temp, humidity) {
-            const mappedTemp = getCeilValue(TEMP_LEVELS, temp);
-            const mappedHumidity = getCeilValue(HUMIDITY_LEVELS, humidity);
-            const humidityIndex = HUMIDITY_LEVELS.indexOf(mappedHumidity);
-            const row = HEAT_INDEX_TABLE[mappedTemp];
+function getHeatIndex(temp, humidity) {
+    // 🆕 溫度低於 26.7°C 或濕度低於 40% → 未達風險標準
+    if (temp < 26.7 || humidity < 40) {
+        return {
+            heatIndex: null,        // 表示未達標
+            mappedTemp: null,
+            mappedHumidity: null,
+            belowThreshold: true     // 🆕 標示
+        };
+    }
 
-            if (!row) {
-                throw new Error("找不到對應的溫度表格資料");
+    const mappedTemp = getCeilValue(TEMP_LEVELS, temp);
+    const mappedHumidity = getCeilValue(HUMIDITY_LEVELS, humidity);
+    const humidityIndex = HUMIDITY_LEVELS.indexOf(mappedHumidity);
+    const row = HEAT_INDEX_TABLE[mappedTemp];
+
+    if (!row) {
+        throw new Error("找不到對應的溫度表格資料");
+    }
+
+    let heatIndex = row[humidityIndex];
+
+    if (heatIndex == null) {
+        for (let i = humidityIndex; i >= 0; i--) {
+            if (row[i] != null) {
+                heatIndex = row[i];
+                break;
             }
-
-            let heatIndex = row[humidityIndex];
-
-            if (heatIndex == null) {
-                for (let i = humidityIndex; i >= 0; i--) {
-                    if (row[i] != null) {
-                        heatIndex = row[i];
-                        break;
-                    }
-                }
-            }
-
-            if (heatIndex == null) {
-                throw new Error("熱指數表格中找不到可用值");
-            }
-
-            return {
-                heatIndex,
-                mappedTemp,
-                mappedHumidity
-            };
         }
+    }
+
+    if (heatIndex == null) {
+        throw new Error("熱指數表格中找不到可用值");
+    }
+
+    return {
+        heatIndex,
+        mappedTemp,
+        mappedHumidity,
+        belowThreshold: false
+    };
+}
 
         function getElementValue(weatherElement, name) {
             if (!weatherElement) return null;
@@ -1454,61 +1464,78 @@ function getNestedValue(obj, path, defaultValue = '--') {
         }
 
         function updateHeatIndexDisplay(station) {
-            const stationName =
-                station?.StationName ||
-                station?.GeoInfo?.StationName ||
-                `${station?.GeoInfo?.CountyName || ''}${station?.GeoInfo?.TownName || ''}` ||
-                "未知測站";
+    const stationName =
+        station?.StationName ||
+        station?.GeoInfo?.StationName ||
+        `${station?.GeoInfo?.CountyName || ''}${station?.GeoInfo?.TownName || ''}` ||
+        "未知測站";
 
-            const obsTime = station?.ObsTime?.DateTime || station?.ObsTime || "未知時間";
-            const weatherElement = station?.WeatherElement;
+    const obsTime = station?.ObsTime?.DateTime || station?.ObsTime || "未知時間";
+    const weatherElement = station?.WeatherElement;
 
-            const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
-            const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
+    const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
+    const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
 
-            //document.getElementById("heat-station-name").textContent = stationName;
-            //document.getElementById("heat-obs-time").textContent = String(obsTime).replace("T", " ");
+    // === 找不到欄位 ===
+    if (tempRaw == null || humidityRaw == null) {
+        document.getElementById("heat-temperature").textContent = "--";
+        document.getElementById("heat-humidity").textContent = "--";
+        document.getElementById("heat-index-value").textContent = "--";
+        document.getElementById("heat-risk-level").textContent = "風險等級:--";
+        document.getElementById("heat-mapping-info").textContent = "表格對應:找不到 AirTemperature 或 RelativeHumidity 欄位";
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
 
-            if (tempRaw == null || humidityRaw == null) {
-                document.getElementById("heat-temperature").textContent = "--";
-                document.getElementById("heat-humidity").textContent = "--";
-                document.getElementById("heat-index-value").textContent = "--";
-                document.getElementById("heat-risk-level").textContent = "風險等級：--";
-                document.getElementById("heat-mapping-info").textContent = "表格對應：找不到 AirTemperature 或 RelativeHumidity 欄位";
-                document.getElementById("heat-box").className = "heat-main-box";
-                return;
-            }
+    const temp = Number(tempRaw);
+    const humidity = Number(humidityRaw);
 
-            const temp = Number(tempRaw);
-            const humidity = Number(humidityRaw);
+    // === 儀器調校中(-99)===
+    if (Number.isNaN(temp) || Number.isNaN(humidity) || temp <= -90 || humidity <= -90) {
+        document.getElementById("heat-temperature").textContent = "儀器調校中";
+        document.getElementById("heat-humidity").textContent = "儀器調校中";
+        document.getElementById("heat-index-value").textContent = "--";
+        document.getElementById("heat-risk-level").textContent = "風險等級:儀器調校中";
+        document.getElementById("heat-mapping-info").textContent = "表格對應:儀器調校中,暫無資料";
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
 
-// 🆕 加入 -99 判斷:儀器調校中
-if (Number.isNaN(temp) || Number.isNaN(humidity) || temp <= -90 || humidity <= -90) {
-    document.getElementById("heat-temperature").textContent = "儀器調校中";
-    document.getElementById("heat-humidity").textContent = "儀器調校中";
-    document.getElementById("heat-index-value").textContent = "--";
-    document.getElementById("heat-risk-level").textContent = "風險等級:儀器調校中";
-    document.getElementById("heat-mapping-info").textContent = "表格對應:儀器調校中,暫無資料";
-    document.getElementById("heat-box").className = "heat-main-box";
-    return;
+    const result = getHeatIndex(temp, humidity);
+
+    // === 🆕 未達熱指數表起始門檻 ===
+    if (result.belowThreshold) {
+        document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
+        document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
+        document.getElementById("heat-index-value").textContent = "未達風險";
+        document.getElementById("heat-risk-level").textContent = "風險等級:未達風險標準";
+
+        let reason = "";
+        if (temp < 26.7 && humidity < 40) reason = "溫度與濕度皆低於熱指數表起始值";
+        else if (temp < 26.7) reason = "溫度低於 26.7°C(熱指數表起始溫度)";
+        else if (humidity < 40) reason = "濕度低於 40%(熱指數表起始濕度)";
+
+        document.getElementById("heat-mapping-info").textContent = `說明:${reason}`;
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
+
+    // === 正常計算 ===
+    const risk = getRiskLevel(result.heatIndex);
+
+    document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
+    document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
+    document.getElementById("heat-index-value").textContent = `${result.heatIndex.toFixed(1)} °C`;
+    document.getElementById("heat-risk-level").textContent = `風險等級:${risk.text}`;
+    document.getElementById("heat-mapping-info").textContent =
+        `表格對應:溫度 ${temp.toFixed(1)} → ${result.mappedTemp.toFixed(1)} °C;濕度 ${humidity.toFixed(0)} → ${result.mappedHumidity} %`;
+
+    const heatBox = document.getElementById("heat-box");
+    heatBox.className = "heat-main-box";
+    if (risk.level > 0) {
+        heatBox.classList.add(`level-${risk.level}`);
+    }
 }
-
-            const result = getHeatIndex(temp, humidity);
-            const risk = getRiskLevel(result.heatIndex);
-
-            document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
-            document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
-            document.getElementById("heat-index-value").textContent = `${result.heatIndex.toFixed(1)} °C`;
-            document.getElementById("heat-risk-level").textContent = `風險等級：${risk.text}`;
-            document.getElementById("heat-mapping-info").textContent =
-                `表格對應：溫度 ${temp.toFixed(1)} → ${result.mappedTemp.toFixed(1)} °C；濕度 ${humidity.toFixed(0)} → ${result.mappedHumidity} %`;
-
-            const heatBox = document.getElementById("heat-box");
-            heatBox.className = "heat-main-box";
-            if (risk.level > 0) {
-                heatBox.classList.add(`level-${risk.level}`);
-            }
-        }
 
         async function fetchWeatherData() {
             const loadingDiv = document.getElementById('loading');
@@ -1546,7 +1573,8 @@ if (Number.isNaN(temp) || Number.isNaN(humidity) || temp <= -90 || humidity <= -
 // 🆕 只在資料正常時才存歷史(避免儀器調校中的無效值汙染圖表)
 const currentTemp = document.getElementById('heat-temperature').textContent;
 const currentHeat = document.getElementById('heat-index-value').textContent;
-if (currentTemp !== '儀器調校中' && currentTemp !== '--' && currentHeat !== '--') {
+if (currentTemp !== '儀器調校中' && currentTemp !== '--' && 
+    currentHeat !== '--' && currentHeat !== '未達風險') {
     saveToHistory(currentTemp, currentHeat);
 }
 
@@ -1832,4 +1860,3 @@ function toggleOutdoorMode() {
 })();
 
     </script>
-
