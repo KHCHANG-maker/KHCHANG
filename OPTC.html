@@ -449,8 +449,18 @@ body {
     align-items: center;
     background: var(--bg-light);
     border-radius: 10px;
-    overflow: hidden;
+    overflow: hidden;          /* 重要:超出範圍隱藏 */
     padding: 6px;
+    position: relative;        /* 🆕 給縮放提示用 */
+    cursor: zoom-in;           /* 🆕 滑鼠變放大鏡 */
+}
+
+.radar-image-wrapper.zoomed {
+    cursor: grab;              /* 放大後變成可拖曳 */
+}
+
+.radar-image-wrapper.dragging {
+    cursor: grabbing;
 }
 
 .radar-image {
@@ -461,6 +471,41 @@ body {
     object-fit: contain;
     display: block;
     border-radius: 8px;
+    transition: transform 0.15s ease-out;  /* 🆕 平滑縮放動畫 */
+    transform-origin: center center;
+    user-select: none;         /* 拖曳時不選取圖片 */
+    -webkit-user-drag: none;   /* 不要觸發系統拖曳 */
+}
+
+/* 縮放提示(右上角)*/
+.radar-zoom-hint {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(30, 90, 150, 0.85);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 5;
+}
+
+.radar-image-wrapper:hover .radar-zoom-hint {
+    opacity: 1;
+}
+
+.radar-image-wrapper.zoomed .radar-zoom-hint {
+    opacity: 1;
+    background: rgba(220, 38, 38, 0.85);
+}
+
+/* 戶外模式適配 */
+body.outdoor-mode .radar-zoom-hint {
+    background: rgba(96, 165, 250, 0.9);
+    color: #0f1e2e;
 }
 
 .loading {
@@ -470,35 +515,235 @@ body {
     font-size: 1.2em;
 }
 
-/* 響應式 */
-@media (max-width: 1280px), (max-height: 650px) {
+/* ============================================ */
+/* === 📱 平板(寬 ≤ 1024px)=== */
+/* ============================================ */
+@media (max-width: 1024px) {
     html, body {
         overflow: auto;
         height: auto;
     }
+    
+    body {
+        padding: 8px;
+    }
+    
     .main-layout {
         height: auto;
         grid-template-columns: 1fr;
+        gap: 10px;
     }
+    
+    .left-col {
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+    }
+    
     .radar-image-wrapper {
-        min-height: 500px;
+        min-height: 450px;
     }
 }
 
+/* ============================================ */
+/* === 📱 手機(寬 ≤ 768px)=== */
+/* ============================================ */
 @media (max-width: 768px) {
-    .station-bar {
-        grid-template-columns: 1fr;
-        gap: 10px;
+    body {
+        padding: 6px;
     }
+    
+    /* 站點橫條:改成 2 欄 */
+    .station-bar {
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+    
     .station-bar-block {
         border-left: none;
         padding-left: 0;
-        border-top: 1px solid rgba(255,255,255,0.3);
+        border-top: 1px solid rgba(255,255,255,0.25);
         padding-top: 8px;
+        grid-column: span 2;
     }
-    .station-bar-block:first-child { border-top: none; padding-top: 0; }
-    .dashboard { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
-    .detail-row { grid-template-columns: repeat(2, 1fr); }
+    
+    .station-bar-block:first-child,
+    .station-bar-main {
+        border-top: none;
+        padding-top: 0;
+        grid-column: span 2;
+    }
+    
+    .station-bar-icon {
+        grid-column: 1;
+        font-size: 1.4em;
+    }
+    
+    .station-bar-main {
+        grid-column: 2;
+        text-align: left;
+    }
+    
+    .station-bar-main .station-bar-value {
+        font-size: 1.2em;
+    }
+    
+    /* 9 張卡片改 2 欄(更易讀)*/
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .card {
+        padding: 10px 8px;
+    }
+    
+    .card-value {
+        font-size: 1.6em;
+    }
+    
+    /* 熱指數:改成上下排列 */
+    .heat-main-box {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 14px;
+        text-align: center;
+    }
+    
+    .heat-main-left {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        padding-right: 0;
+        padding-bottom: 10px;
+    }
+    
+    .heat-main-value {
+        font-size: 2em;
+    }
+    
+    .heat-main-meta {
+        font-size: 0.9em;
+        text-align: center;
+    }
+    
+    /* 詳細數據:改 2 欄 */
+    .detail-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    .detail-item {
+        padding: 8px 10px;
+    }
+    
+    .detail-value {
+        font-size: 0.95em;
+    }
+    
+    /* 雷達資訊:改成 1 欄 */
+    .radar-info {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        font-size: 0.85em;
+    }
+    
+    .radar-image-wrapper {
+        min-height: 350px;
+    }
+    
+    /* 歷史圖表 */
+    .history-container {
+        min-height: 280px;
+    }
+    
+    .history-chart-wrapper {
+        min-height: 220px;
+    }
+    
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .history-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    /* 底部按鈕:改成多行排列 */
+    .update-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px;
+    }
+    
+    .update-time {
+        text-align: center;
+    }
+    
+    .refresh-btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    /* 標題字大小 */
+    .heat-index-title,
+    .details-title,
+    .history-title,
+    .radar-title {
+        font-size: 1em;
+    }
+}
+
+/* ============================================ */
+/* === 📱 小手機(寬 ≤ 480px)=== */
+/* ============================================ */
+@media (max-width: 480px) {
+    /* 9 張卡片改回 1 欄太佔空間,維持 2 欄,但縮小 */
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+    
+    .card-title {
+        font-size: 0.78em;
+    }
+    
+    .card-value {
+        font-size: 1.4em;
+    }
+    
+    .card-unit {
+        font-size: 0.75em;
+    }
+    
+    /* 詳細數據改 1 欄(時間欄位太長)*/
+    .detail-row {
+        grid-template-columns: 1fr;
+    }
+    
+    /* 雷達圖小一點 */
+    .radar-image-wrapper {
+        min-height: 280px;
+    }
+    
+    /* 站點橫條更精簡 */
+    .station-bar-label {
+        font-size: 0.65em;
+    }
+    
+    .station-bar-value {
+        font-size: 0.9em;
+    }
+    
+    /* 熱指數數字 */
+    .heat-main-value {
+        font-size: 1.7em;
+    }
 }
 
 /* === 歷史趨勢 Modal === */
@@ -549,7 +794,7 @@ body.outdoor-mode .update-section {
 
 body.outdoor-mode .card {
     border-top-color: #60a5fa;
-    }
+}
 
 /* 標題類:亮藍 */
 body.outdoor-mode .card-title,
@@ -787,7 +1032,8 @@ body.outdoor-mode .loading {
 <!-- 📈 內嵌歷史趨勢圖 -->
 <div class="history-container">
    <div class="history-header">
-    <div class="history-title">📈 過去 24 小時溫度與熱指數趨勢<span id="hist-station" style="opacity:0.7; font-weight:normal;"></span></div>
+    <div class="history-title">📈 過去 24 小時溫度與熱指數趨勢 <span id="hist-station" style="opacity:0.7; font-weight:normal;"></span>
+</div>
     <div class="history-stats">
         <span class="history-stat heat">
             <span class="history-stat-label">最高熱指數:</span>
@@ -842,7 +1088,7 @@ body.outdoor-mode .loading {
             <div class="radar-info">
                 <div class="radar-info-item">
                     <span class="radar-info-label">📍 位置:</span>
-                    東經 <span id="radar-lon">120.58°</span>,北緯 <span id="radar-lat">24.14°</span>
+                    東經 <span id="radar-lon">120.62°</span>,北緯 <span id="radar-lat">24.13°</span>
                 </div>
                 <div class="radar-info-item">
                     <span class="radar-info-label">📏 範圍:</span>
@@ -853,11 +1099,12 @@ body.outdoor-mode .loading {
                     <span>--</span>
                 </div>
             </div>
-            <div class="radar-image-wrapper">
-                <img id="radar-image" class="radar-image"
-                     src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png"
-                     alt="南屯雷達回波圖" onerror="handleRadarImageError()">
-            </div>
+<div class="radar-image-wrapper" id="radar-wrapper">
+    <div class="radar-zoom-hint" id="radar-zoom-hint">🔍 滾輪縮放 · 拖曳移動 · 雙擊還原</div>
+    <img id="radar-image" class="radar-image"
+         src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-002.png"
+         alt="南屯雷達回波圖" onerror="handleRadarImageError()">
+</div>
         </div>
 
     </div>
@@ -911,13 +1158,10 @@ function clearHistory() {
 }
 
 function renderHistoryChart() {
-
-
     // 🆕 加在這裡(最開頭)
     const stationName = document.getElementById('station-name')?.textContent?.trim() || '';
     const histStation = document.getElementById('hist-station');
     if (histStation) histStation.textContent = stationName ? `(${stationName})` : '';
-
 
     let data = [];
     try {
@@ -1003,7 +1247,10 @@ function renderHistoryChart() {
 
 window.addEventListener('load', () => {
     setTimeout(renderHistoryChart, 500);
-});</script>
+});
+
+
+</script>
 </body>
 </html>
 
@@ -1011,7 +1258,7 @@ window.addEventListener('load', () => {
         const API_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0001-001?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&StationId=C0F9T0&StationName=%E8%A5%BF%E5%B1%AF';
         const RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-002.png';
 async function loadRadarInfo() {
-  const url = 'https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/O-A0084-003?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&format=XML';
+  const url = 'https://opendata.cwa.gov.tw/fileapi/v1/opendataapi/O-A0084-002?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&format=XML';
   const res = await fetch(url);
   const text = await res.text();
   const parser = new DOMParser();
@@ -1076,14 +1323,19 @@ async function loadRadarInfo() {
             return '🌤️';
         }
 
-        function getNestedValue(obj, path, defaultValue = '--') {
-            try {
-                const value = path.split('.').reduce((current, prop) => current?.[prop], obj);
-                return value !== undefined && value !== null && value !== '-99' ? value : defaultValue;
-            } catch (e) {
-                return defaultValue;
-            }
-        }
+function getNestedValue(obj, path, defaultValue = '--') {
+    try {
+        const value = path.split('.').reduce((current, prop) => current?.[prop], obj);
+        // 過濾無效值:null/undefined/-99(字串或數字)/NaN
+        if (value === undefined || value === null) return defaultValue;
+        if (value === '-99' || value === -99) return defaultValue;
+        const num = parseFloat(value);
+        if (!isNaN(num) && num <= -90) return defaultValue;  // 任何 -90 以下都視為無效
+        return value;
+    } catch (e) {
+        return defaultValue;
+    }
+}
 
         function formatDateTime(dateTimeString) {
             if (!dateTimeString || dateTimeString === '--') return '--';
@@ -1124,37 +1376,48 @@ async function loadRadarInfo() {
             return levels[levels.length - 1];
         }
 
-        function getHeatIndex(temp, humidity) {
-            const mappedTemp = getCeilValue(TEMP_LEVELS, temp);
-            const mappedHumidity = getCeilValue(HUMIDITY_LEVELS, humidity);
-            const humidityIndex = HUMIDITY_LEVELS.indexOf(mappedHumidity);
-            const row = HEAT_INDEX_TABLE[mappedTemp];
+function getHeatIndex(temp, humidity) {
+    // 🆕 溫度低於 26.7°C 或濕度低於 40% → 未達風險標準
+    if (temp < 26.7 || humidity < 40) {
+        return {
+            heatIndex: null,        // 表示未達標
+            mappedTemp: null,
+            mappedHumidity: null,
+            belowThreshold: true     // 🆕 標示
+        };
+    }
 
-            if (!row) {
-                throw new Error("找不到對應的溫度表格資料");
+    const mappedTemp = getCeilValue(TEMP_LEVELS, temp);
+    const mappedHumidity = getCeilValue(HUMIDITY_LEVELS, humidity);
+    const humidityIndex = HUMIDITY_LEVELS.indexOf(mappedHumidity);
+    const row = HEAT_INDEX_TABLE[mappedTemp];
+
+    if (!row) {
+        throw new Error("找不到對應的溫度表格資料");
+    }
+
+    let heatIndex = row[humidityIndex];
+
+    if (heatIndex == null) {
+        for (let i = humidityIndex; i >= 0; i--) {
+            if (row[i] != null) {
+                heatIndex = row[i];
+                break;
             }
-
-            let heatIndex = row[humidityIndex];
-
-            if (heatIndex == null) {
-                for (let i = humidityIndex; i >= 0; i--) {
-                    if (row[i] != null) {
-                        heatIndex = row[i];
-                        break;
-                    }
-                }
-            }
-
-            if (heatIndex == null) {
-                throw new Error("熱指數表格中找不到可用值");
-            }
-
-            return {
-                heatIndex,
-                mappedTemp,
-                mappedHumidity
-            };
         }
+    }
+
+    if (heatIndex == null) {
+        throw new Error("熱指數表格中找不到可用值");
+    }
+
+    return {
+        heatIndex,
+        mappedTemp,
+        mappedHumidity,
+        belowThreshold: false
+    };
+}
 
         function getElementValue(weatherElement, name) {
             if (!weatherElement) return null;
@@ -1201,60 +1464,78 @@ async function loadRadarInfo() {
         }
 
         function updateHeatIndexDisplay(station) {
-            const stationName =
-                station?.StationName ||
-                station?.GeoInfo?.StationName ||
-                `${station?.GeoInfo?.CountyName || ''}${station?.GeoInfo?.TownName || ''}` ||
-                "未知測站";
+    const stationName =
+        station?.StationName ||
+        station?.GeoInfo?.StationName ||
+        `${station?.GeoInfo?.CountyName || ''}${station?.GeoInfo?.TownName || ''}` ||
+        "未知測站";
 
-            const obsTime = station?.ObsTime?.DateTime || station?.ObsTime || "未知時間";
-            const weatherElement = station?.WeatherElement;
+    const obsTime = station?.ObsTime?.DateTime || station?.ObsTime || "未知時間";
+    const weatherElement = station?.WeatherElement;
 
-            const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
-            const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
+    const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
+    const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
 
-            //document.getElementById("heat-station-name").textContent = stationName;
-            //document.getElementById("heat-obs-time").textContent = String(obsTime).replace("T", " ");
+    // === 找不到欄位 ===
+    if (tempRaw == null || humidityRaw == null) {
+        document.getElementById("heat-temperature").textContent = "--";
+        document.getElementById("heat-humidity").textContent = "--";
+        document.getElementById("heat-index-value").textContent = "--";
+        document.getElementById("heat-risk-level").textContent = "風險等級:--";
+        document.getElementById("heat-mapping-info").textContent = "表格對應:找不到 AirTemperature 或 RelativeHumidity 欄位";
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
 
-            if (tempRaw == null || humidityRaw == null) {
-                document.getElementById("heat-temperature").textContent = "--";
-                document.getElementById("heat-humidity").textContent = "--";
-                document.getElementById("heat-index-value").textContent = "--";
-                document.getElementById("heat-risk-level").textContent = "風險等級：--";
-                document.getElementById("heat-mapping-info").textContent = "表格對應：找不到 AirTemperature 或 RelativeHumidity 欄位";
-                document.getElementById("heat-box").className = "heat-main-box";
-                return;
-            }
+    const temp = Number(tempRaw);
+    const humidity = Number(humidityRaw);
 
-            const temp = Number(tempRaw);
-            const humidity = Number(humidityRaw);
+    // === 儀器調校中(-99)===
+    if (Number.isNaN(temp) || Number.isNaN(humidity) || temp <= -90 || humidity <= -90) {
+        document.getElementById("heat-temperature").textContent = "儀器調校中";
+        document.getElementById("heat-humidity").textContent = "儀器調校中";
+        document.getElementById("heat-index-value").textContent = "--";
+        document.getElementById("heat-risk-level").textContent = "風險等級:儀器調校中";
+        document.getElementById("heat-mapping-info").textContent = "表格對應:儀器調校中,暫無資料";
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
 
-            if (Number.isNaN(temp) || Number.isNaN(humidity)) {
-                document.getElementById("heat-temperature").textContent = "--";
-                document.getElementById("heat-humidity").textContent = "--";
-                document.getElementById("heat-index-value").textContent = "--";
-                document.getElementById("heat-risk-level").textContent = "風險等級：--";
-                document.getElementById("heat-mapping-info").textContent = `表格對應：數值格式異常 temp=${tempRaw}, humidity=${humidityRaw}`;
-                document.getElementById("heat-box").className = "heat-main-box";
-                return;
-            }
+    const result = getHeatIndex(temp, humidity);
 
-            const result = getHeatIndex(temp, humidity);
-            const risk = getRiskLevel(result.heatIndex);
+    // === 🆕 未達熱指數表起始門檻 ===
+    if (result.belowThreshold) {
+        document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
+        document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
+        document.getElementById("heat-index-value").textContent = "未達風險";
+        document.getElementById("heat-risk-level").textContent = "風險等級:未達風險標準";
 
-            document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
-            document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
-            document.getElementById("heat-index-value").textContent = `${result.heatIndex.toFixed(1)} °C`;
-            document.getElementById("heat-risk-level").textContent = `風險等級：${risk.text}`;
-            document.getElementById("heat-mapping-info").textContent =
-                `表格對應：溫度 ${temp.toFixed(1)} → ${result.mappedTemp.toFixed(1)} °C；濕度 ${humidity.toFixed(0)} → ${result.mappedHumidity} %`;
+        let reason = "";
+        if (temp < 26.7 && humidity < 40) reason = "溫度與濕度皆低於熱指數表起始值";
+        else if (temp < 26.7) reason = "溫度低於 26.7°C(熱指數表起始溫度)";
+        else if (humidity < 40) reason = "濕度低於 40%(熱指數表起始濕度)";
 
-            const heatBox = document.getElementById("heat-box");
-            heatBox.className = "heat-main-box";
-            if (risk.level > 0) {
-                heatBox.classList.add(`level-${risk.level}`);
-            }
-        }
+        document.getElementById("heat-mapping-info").textContent = `說明:${reason}`;
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
+
+    // === 正常計算 ===
+    const risk = getRiskLevel(result.heatIndex);
+
+    document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
+    document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
+    document.getElementById("heat-index-value").textContent = `${result.heatIndex.toFixed(1)} °C`;
+    document.getElementById("heat-risk-level").textContent = `風險等級:${risk.text}`;
+    document.getElementById("heat-mapping-info").textContent =
+        `表格對應:溫度 ${temp.toFixed(1)} → ${result.mappedTemp.toFixed(1)} °C;濕度 ${humidity.toFixed(0)} → ${result.mappedHumidity} %`;
+
+    const heatBox = document.getElementById("heat-box");
+    heatBox.className = "heat-main-box";
+    if (risk.level > 0) {
+        heatBox.classList.add(`level-${risk.level}`);
+    }
+}
 
         async function fetchWeatherData() {
             const loadingDiv = document.getElementById('loading');
@@ -1289,9 +1570,18 @@ async function loadRadarInfo() {
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
                 
-                const currentTemp = document.getElementById('heat-temperature').textContent;
-const currentHeat = document.getElementById('heat-index-value').textContent;
-saveToHistory(currentTemp, currentHeat);
+// 🆕 只在資料正常時才存歷史(避免儀器調校中的無效值汙染圖表)
+const currentTemp = document.getElementById('heat-temperature').textContent;
+let currentHeat = document.getElementById('heat-index-value').textContent;
+
+// 「未達風險」時,熱指數 = 溫度(讓圖表連續)
+if (currentHeat === '未達風險' && currentTemp !== '儀器調校中' && currentTemp !== '--') {
+    currentHeat = currentTemp;
+}
+
+if (currentTemp !== '儀器調校中' && currentTemp !== '--' && currentHeat !== '--') {
+    saveToHistory(currentTemp, currentHeat);
+}
 
             } catch (error) {
                 console.error('錯誤:', error);
@@ -1474,6 +1764,104 @@ function toggleOutdoorMode() {
             if (btn) btn.textContent = '☀️ 室內模式';
         });
     }
+})();
+
+
+// === 🔍 雷達圖縮放功能 ===
+(function setupRadarZoom() {
+    const wrapper = document.getElementById('radar-wrapper');
+    const img = document.getElementById('radar-image');
+    const hint = document.getElementById('radar-zoom-hint');
+    if (!wrapper || !img) return;
+
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let startTransX = 0, startTransY = 0;
+
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 5;
+    const ZOOM_SPEED = 0.2;
+
+    function applyTransform() {
+        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        if (scale > 1) {
+            wrapper.classList.add('zoomed');
+            if (hint) hint.textContent = `🔍 ${scale.toFixed(1)}x · 雙擊還原`;
+        } else {
+            wrapper.classList.remove('zoomed');
+            if (hint) hint.textContent = '🔍 滾輪縮放 · 拖曳移動 · 雙擊還原';
+        }
+    }
+
+    function reset() {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        applyTransform();
+    }
+
+    // 滾輪縮放(以滑鼠位置為中心)
+    wrapper.addEventListener('wheel', (e) => {
+        e.preventDefault();
+
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - rect.width / 2;
+        const mouseY = e.clientY - rect.top - rect.height / 2;
+
+        const delta = e.deltaY < 0 ? ZOOM_SPEED : -ZOOM_SPEED;
+        const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
+
+        if (newScale === scale) return;
+
+        // 以滑鼠位置為中心縮放
+        const scaleRatio = newScale / scale;
+        translateX = mouseX - (mouseX - translateX) * scaleRatio;
+        translateY = mouseY - (mouseY - translateY) * scaleRatio;
+        scale = newScale;
+
+        // 縮回原本大小時自動置中
+        if (scale === 1) {
+            translateX = 0;
+            translateY = 0;
+        }
+
+        applyTransform();
+    }, { passive: false });
+
+    // 拖曳開始
+    wrapper.addEventListener('mousedown', (e) => {
+        if (scale <= 1) return;
+        isDragging = true;
+        wrapper.classList.add('dragging');
+        startX = e.clientX;
+        startY = e.clientY;
+        startTransX = translateX;
+        startTransY = translateY;
+        img.style.transition = 'none';
+        e.preventDefault();
+    });
+
+    // 拖曳移動(綁在 document 上,即使滑出 wrapper 也能繼續拖)
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translateX = startTransX + (e.clientX - startX);
+        translateY = startTransY + (e.clientY - startY);
+        applyTransform();
+    });
+
+    // 拖曳結束
+    document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        wrapper.classList.remove('dragging');
+        img.style.transition = 'transform 0.15s ease-out';
+    });
+
+    // 雙擊還原
+    wrapper.addEventListener('dblclick', reset);
 })();
 
     </script>
