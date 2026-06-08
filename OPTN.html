@@ -2018,6 +2018,14 @@ function applyTransform() {
     });
 
     wrapper.addEventListener('dblclick', reset);
+
+    // 🆕 初始化標籤位置
+    if (document.readyState === 'complete') {
+        applyTransform();
+    } else {
+        window.addEventListener('load', applyTransform);
+    }
+
 })();
 
     </script>
