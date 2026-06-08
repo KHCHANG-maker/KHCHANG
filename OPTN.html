@@ -521,6 +521,7 @@ body {
     -webkit-user-drag: none;
 }
 
+
 /* === 公司位置標記 === */
 .company-marker {
     position: absolute;
@@ -528,18 +529,7 @@ body {
     height: 0;
     pointer-events: none;
     z-index: 10;
-    /* ❌ 移除 transform-origin 和 transition */
 }
-
-
-/* dot 和 label 才需要反向縮放,pulse-ring 不需要 */
-.marker-dot,
-.marker-label {
-    transform-origin: center center;
-    transition: transform 0.15s ease-out;
-}
-
-
 
 /* 中心藍點 */
 .marker-dot {
@@ -549,24 +539,25 @@ body {
     margin-left: -7px;
     margin-top: -7px;
     border-radius: 50%;
-    background: #1e5a96;                                       /* 🔵 改成深藍 */
+    background: #1e5a96;
     border: 2.5px solid white;
-    box-shadow: 0 0 8px rgba(30, 90, 150, 0.9), 0 2px 4px rgba(0,0,0,0.4);  /* 🔵 陰影也改藍 */
+    box-shadow: 0 0 8px rgba(30, 90, 150, 0.9), 0 2px 4px rgba(0,0,0,0.4);
     z-index: 2;
+    transform-origin: center center;
+    transition: transform 0.15s ease-out;
 }
 
-/* 閃爍光環 */
+/* 閃爍光環(會跟著縮放,視覺更生動)*/
 .marker-pulse-ring {
     position: absolute;
     margin-left: -7px;
     margin-top: -7px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: rgba(30, 90, 150, 0.6);
     animation: markerPulse 1.8s ease-out infinite;
     z-index: 1;
-    /* width/height 改用動畫控制 */
-    width: 14px;
-    height: 14px;
 }
 
 @keyframes markerPulse {
@@ -586,14 +577,13 @@ body {
     }
 }
 
-
 /* 標籤 */
 .marker-label {
     position: absolute;
-    top: -32px;
+    top: 0;
     left: 0;
-    transform: translateX(-50%);
-    background: rgba(30, 90, 150, 0.75);   /* 🔵 0.95 → 0.75 半透明 */
+    /* 🔄 移除 bottom: 14px,改用 JS 動態控制 */
+    background: rgba(30, 90, 150, 0.75);
     color: white;
     padding: 4px 10px;
     border-radius: 12px;
@@ -602,7 +592,9 @@ body {
     white-space: nowrap;
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     border: 1px solid rgba(255,255,255,0.5);
-    backdrop-filter: blur(2px);            /* 🆕 加毛玻璃效果,文字更清楚 */
+    backdrop-filter: blur(2px);
+    transform-origin: 50% 100%;
+    transition: transform 0.15s ease-out;
 }
 
 .marker-label::after {
@@ -615,7 +607,7 @@ body {
     height: 0;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
-    border-top: 5px solid rgba(30, 90, 150, 0.75);   /* 🔵 同上 */
+    border-top: 5px solid rgba(30, 90, 150, 0.75);
 }
 
 
@@ -1953,11 +1945,14 @@ function applyTransform() {
         const inverseScale = 1 / scale;
         const dot = marker.querySelector('.marker-dot');
         const label = marker.querySelector('.marker-label');
-        // pulse-ring 保留動畫,讓它跟著縮放(視覺更好)
         
         if (dot) dot.style.transform = `scale(${inverseScale})`;
-        if (label) label.style.transform = `translateX(-50%) scale(${inverseScale})`;
-    }
+        
+        if (label) {
+            const gap = 14 * inverseScale;
+            label.style.transform = `translate(-50%, calc(-100% - ${gap}px)) scale(${inverseScale})`;
+        }
+    }   // ← 你之前漏掉這個關閉括號
     
     if (scale > 1) {
         wrapper.classList.add('zoomed');
