@@ -539,8 +539,8 @@ body {
     margin-left: -7px;
     margin-top: -7px;
     border-radius: 50%;
-    background: rgba(30, 90, 150, 0.5);                 /* 🆕 藍色背景 50% 透明 */
-    border: 2.5px solid rgba(255, 255, 255, 0.5);       /* 🆕 白圈 50% 透明 */
+    background: rgba(30, 90, 150, 0.7);                 /* 🔄 0.5 → 0.7 */
+    border: 2.5px solid rgba(255, 255, 255, 0.7);       /* 🔄 0.5 → 0.7 */
     box-shadow: 0 0 8px rgba(30, 90, 150, 0.9), 0 2px 4px rgba(0,0,0,0.4);
     z-index: 2;
     transform-origin: center center;
@@ -609,6 +609,27 @@ body {
     border-top: 5px solid rgba(30, 90, 150, 0.75);
 }
 
+
+    @keyframes markerPulse {
+        0% {
+            width: 5px;       /* 10 → 5 */
+            height: 5px;
+            margin-left: -2.5px;
+            margin-top: -2.5px;
+            opacity: 0.8;
+        }
+        100% {
+            width: 24px;      /* 40 → 24 */
+            height: 24px;
+            margin-left: -12px;
+            margin-top: -12px;
+            opacity: 0;
+        }
+    }
+
+
+
+
 /* === 手機版:標記縮小 === */
 @media (max-width: 768px) {
     .marker-dot {
@@ -626,22 +647,7 @@ body {
         margin-top: -2.5px;
     }
     
-    @keyframes markerPulse {
-        0% {
-            width: 5px;       /* 10 → 5 */
-            height: 5px;
-            margin-left: -2.5px;
-            margin-top: -2.5px;
-            opacity: 0.8;
-        }
-        100% {
-            width: 24px;      /* 40 → 24 */
-            height: 24px;
-            margin-left: -12px;
-            margin-top: -12px;
-            opacity: 0;
-        }
-    }
+
     
     .marker-label {
         font-size: 10px;
