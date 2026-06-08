@@ -856,7 +856,187 @@ body.outdoor-mode .radar-zoom-hint {
     color: #0f1e2e;
 }
 
+/* ============================================ */
+/* === 🌦️ 天氣動態背景(限定在 dashboard 內)=== */
+/* ============================================ */
 
+/* dashboard 啟用時:加背景 + 限制動畫範圍 */
+.dashboard {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    transition: background 1.5s ease, padding 0.3s ease;
+}
+
+.dashboard.weather-bg-active {
+    padding: 10px;
+    background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
+}
+
+.dashboard.weather-bg-active.weather-sunny {
+    background: linear-gradient(135deg, #FFB347 0%, #87CEEB 60%, #E0F6FF 100%);
+}
+
+.dashboard.weather-bg-active.weather-cloudy {
+    background: linear-gradient(135deg, #8da9c4 0%, #c5d3df 100%);
+}
+
+.dashboard.weather-bg-active.weather-overcast {
+    background: linear-gradient(135deg, #5e6f80 0%, #8a99a8 100%);
+}
+
+.dashboard.weather-bg-active.weather-rain {
+    background: linear-gradient(135deg, #5b6c7d 0%, #8a9eb1 100%);
+}
+
+.dashboard.weather-bg-active.weather-thunder {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+}
+
+.dashboard.weather-bg-active.weather-fog {
+    background: linear-gradient(135deg, #b8c5d1 0%, #d6dde4 100%);
+}
+
+/* 動畫容器 */
+.weather-effects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+/* 卡片在動畫之上,半透明讓背景透出來 */
+.dashboard.weather-bg-active .card {
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* 戶外模式適配 */
+body.outdoor-mode .dashboard.weather-bg-active .card {
+    background: rgba(26, 41, 64, 0.92);
+}
+
+/* === 太陽(晴天)=== */
+.big-sun {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff5cc 0%, #ffd700 50%, transparent 70%);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+    animation: sunPulse 4s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+    0%, 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
+    50%      { box-shadow: 0 0 45px rgba(255, 215, 0, 0.9); }
+}
+
+.sun-particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: rgba(255, 215, 0, 0.7);
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
+    animation: sunFloat linear infinite;
+}
+
+@keyframes sunFloat {
+    0%   { top: 100%; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: -10px; opacity: 0; }
+}
+
+/* === 雲(多雲、陰)=== */
+.cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 100px;
+    animation: cloudMove linear infinite;
+}
+
+.cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+}
+
+.cloud::before {
+    width: 60%;
+    height: 100%;
+    top: -50%;
+    left: 20%;
+}
+
+.cloud::after {
+    width: 40%;
+    height: 80%;
+    top: -30%;
+    right: 15%;
+}
+
+@keyframes cloudMove {
+    0%   { left: -150px; }
+    100% { left: 100%; }
+}
+
+/* === 雨滴 === */
+.raindrop {
+    position: absolute;
+    top: -40px;
+    width: 1.5px;
+    height: 25px;
+    background: linear-gradient(to bottom, transparent, rgba(174, 194, 224, 0.8));
+    animation: rainFall linear infinite;
+}
+
+@keyframes rainFall {
+    0%   { top: -40px; }
+    100% { top: 100%; }
+}
+
+/* === 閃電 === */
+.lightning-flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0);
+    pointer-events: none;
+    animation: lightning 8s infinite;
+}
+
+@keyframes lightning {
+    0%, 95%, 100% { background: rgba(255, 255, 255, 0); }
+    96%, 98%       { background: rgba(255, 255, 255, 0.5); }
+    97%, 99%       { background: rgba(255, 255, 255, 0); }
+}
+
+/* === 霧 === */
+.fog {
+    position: absolute;
+    width: 200%;
+    height: 60px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.5) 0%, transparent 70%);
+    animation: fogMove linear infinite;
+}
+
+@keyframes fogMove {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(0%); }
+}
 
  </style>
 </head>
@@ -933,6 +1113,9 @@ body.outdoor-mode .radar-zoom-hint {
 
             <!-- 9 個觀測卡片 -->
             <div class="dashboard">
+    <!-- 🆕 加在最前面 -->
+    <div class="weather-effects" id="weather-effects"></div>
+
                 <div class="card">
                     <div class="card-title">🌤️ 天氣狀況</div>
                     <div class="card-value" id="weather-desc" style="font-size: 1.2em;">--</div>
@@ -1025,6 +1208,7 @@ body.outdoor-mode .radar-zoom-hint {
     <div class="update-time">
         📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
     </div>
+    <button class="refresh-btn" onclick="toggleWeatherEffects()" id="weather-bg-btn">🌧️ 動態背景</button>
     <button class="refresh-btn" onclick="toggleOutdoorMode()" id="outdoor-btn">🌞 戶外模式</button>
     <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
     <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
@@ -1569,6 +1753,11 @@ if (currentHeat === '未達風險' && currentTemp !== '儀器調校中' && curre
 
 if (currentTemp !== '儀器調校中' && currentTemp !== '--' && currentHeat !== '--') {
     saveToHistory(currentTemp, currentHeat);
+
+// 🆕 天氣資料更新時,自動套用對應動畫
+const weatherText = document.getElementById('weather-desc')?.textContent || '';
+applyWeatherEffect(weatherText);
+
 }
 
             } catch (error) {
@@ -1864,4 +2053,161 @@ function toggleOutdoorMode() {
         window.addEventListener('load', applyTransform);
     }
 })();
+
+
+
+// ============================================
+// === 🌦️ 天氣動態背景 ===
+// ============================================
+
+// 偵測天氣文字屬於哪一類
+function detectWeatherType(weatherText) {
+    if (!weatherText) return 'sunny';
+    const text = weatherText.toString();
+    if (text.includes('雷')) return 'thunder';
+    if (text.includes('雨')) return 'rain';
+    if (text.includes('霧')) return 'fog';
+    if (text.includes('陰')) return 'overcast';
+    if (text.includes('多雲')) return 'cloudy';
+    return 'sunny';  // 預設晴天
+}
+
+// 套用天氣特效
+function applyWeatherEffect(weatherText) {
+    if (!document.body.classList.contains('weather-effects-on')) return;
+
+    const type = detectWeatherType(weatherText);
+    const dashboard = document.querySelector('.dashboard');
+    const effects = document.getElementById('weather-effects');
+    if (!dashboard || !effects) return;
+
+    // 移除舊的天氣 class,套上新的
+    dashboard.classList.remove(
+        'weather-sunny', 'weather-cloudy', 'weather-overcast',
+        'weather-rain', 'weather-thunder', 'weather-fog'
+    );
+    dashboard.classList.add('weather-' + type);
+
+    // 清空舊動畫,生成新的
+    effects.innerHTML = '';
+    generateWeatherEffects(type, effects);
+}
+
+// 產生對應動畫元素
+function generateWeatherEffects(type, container) {
+    switch(type) {
+        case 'sunny':
+            const sun = document.createElement('div');
+            sun.className = 'big-sun';
+            container.appendChild(sun);
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.className = 'sun-particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 6 + 's';
+                p.style.animationDuration = (4 + Math.random() * 3) + 's';
+                container.appendChild(p);
+            }
+            break;
+
+        case 'cloudy':
+        case 'overcast':
+            const cloudCount = type === 'overcast' ? 4 : 3;
+            for (let i = 0; i < cloudCount; i++) {
+                const c = document.createElement('div');
+                c.className = 'cloud';
+                const size = 50 + Math.random() * 60;
+                c.style.width = size + 'px';
+                c.style.height = (size * 0.4) + 'px';
+                c.style.top = Math.random() * 60 + '%';
+                c.style.animationDuration = (25 + Math.random() * 25) + 's';
+                c.style.animationDelay = -Math.random() * 50 + 's';
+                container.appendChild(c);
+            }
+            break;
+
+        case 'rain':
+            for (let i = 0; i < 25; i++) {
+                const r = document.createElement('div');
+                r.className = 'raindrop';
+                r.style.left = Math.random() * 100 + '%';
+                r.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
+                r.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(r);
+            }
+            break;
+
+        case 'thunder':
+            for (let i = 0; i < 35; i++) {
+                const r = document.createElement('div');
+                r.className = 'raindrop';
+                r.style.left = Math.random() * 100 + '%';
+                r.style.animationDuration = (0.3 + Math.random() * 0.4) + 's';
+                r.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(r);
+            }
+            const flash = document.createElement('div');
+            flash.className = 'lightning-flash';
+            container.appendChild(flash);
+            break;
+
+        case 'fog':
+            for (let i = 0; i < 3; i++) {
+                const f = document.createElement('div');
+                f.className = 'fog';
+                f.style.top = (i * 35) + '%';
+                f.style.animationDuration = (25 + Math.random() * 15) + 's';
+                f.style.animationDelay = -Math.random() * 30 + 's';
+                container.appendChild(f);
+            }
+            break;
+    }
+}
+
+// 切換動態背景
+function toggleWeatherEffects() {
+    const isOn = !document.body.classList.contains('weather-effects-on');
+    document.body.classList.toggle('weather-effects-on', isOn);
+    localStorage.setItem('weather-effects-on', isOn);
+
+    const btn = document.getElementById('weather-bg-btn');
+    if (btn) btn.textContent = isOn ? '🚫 關閉特效' : '🌧️ 動態背景';
+
+    const dashboard = document.querySelector('.dashboard');
+    if (!dashboard) return;
+
+    if (isOn) {
+        dashboard.classList.add('weather-bg-active');
+        const weatherText = document.getElementById('weather-desc')?.textContent || '';
+        applyWeatherEffect(weatherText);
+    } else {
+        dashboard.classList.remove('weather-bg-active',
+            'weather-sunny', 'weather-cloudy', 'weather-overcast',
+            'weather-rain', 'weather-thunder', 'weather-fog');
+        const effects = document.getElementById('weather-effects');
+        if (effects) effects.innerHTML = '';
+    }
+}
+
+// 還原使用者上次設定
+(function restoreWeatherEffects() {
+    if (localStorage.getItem('weather-effects-on') === 'true') {
+        document.body.classList.add('weather-effects-on');
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) dashboard.classList.add('weather-bg-active');
+
+        window.addEventListener('load', () => {
+            const btn = document.getElementById('weather-bg-btn');
+            if (btn) btn.textContent = '🚫 關閉特效';
+            // 等氣象資料載入後再套用
+            setTimeout(() => {
+                const weatherText = document.getElementById('weather-desc')?.textContent || '';
+                applyWeatherEffect(weatherText);
+            }, 1500);
+        });
+    }
+})();
+
+
+
     </script>
