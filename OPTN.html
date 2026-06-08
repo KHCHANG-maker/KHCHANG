@@ -502,6 +502,116 @@ body {
     background: rgba(220, 38, 38, 0.85);
 }
 
+/* === 雷達圖容器(取代直接顯示 img)=== */
+.radar-canvas {
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+    transition: transform 0.15s ease-out;
+    transform-origin: center center;
+}
+
+.radar-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 8px;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* === 公司位置標記 === */
+.company-marker {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 10;
+    transform-origin: center center;
+    transition: transform 0.15s ease-out;
+}
+
+
+
+/* 中心藍點 */
+.marker-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: #1e5a96;                                       /* 🔵 改成深藍 */
+    border: 2.5px solid white;
+    box-shadow: 0 0 8px rgba(30, 90, 150, 0.9), 0 2px 4px rgba(0,0,0,0.4);  /* 🔵 陰影也改藍 */
+    z-index: 2;
+}
+
+/* 閃爍光環 */
+.marker-pulse-ring {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: rgba(30, 90, 150, 0.6);                        /* 🔵 改藍色光環 */
+    animation: markerPulse 1.8s ease-out infinite;
+    z-index: 1;
+}
+
+/* 標籤 */
+.marker-label {
+    position: absolute;
+    top: -32px;
+    left: 0;
+    transform: translateX(-50%);
+    background: rgba(30, 90, 150, 0.75);   /* 🔵 0.95 → 0.75 半透明 */
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.5);
+    backdrop-filter: blur(2px);            /* 🆕 加毛玻璃效果,文字更清楚 */
+}
+
+.marker-label::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(30, 90, 150, 0.75);   /* 🔵 同上 */
+}
+
+/* 戶外模式適配 */
+body.outdoor-mode .marker-label {
+    background: rgba(96, 165, 250, 0.75);
+    border-color: white;
+}
+
+body.outdoor-mode .marker-label::after {
+    border-top-color: rgba(96, 165, 250, 0.75);
+}
+
+body.outdoor-mode .marker-dot {
+    background: #60a5fa;                                       /* 🔵 戶外淺藍 */
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.9), 0 2px 4px rgba(0,0,0,0.4);
+}
+
+body.outdoor-mode .marker-pulse-ring {
+    background: rgba(96, 165, 250, 0.6);
+}
+
+
 /* 戶外模式適配 */
 body.outdoor-mode .radar-zoom-hint {
     background: rgba(96, 165, 250, 0.9);
@@ -1099,12 +1209,25 @@ body.outdoor-mode .loading {
                     <span>--</span>
                 </div>
             </div>
+
 <div class="radar-image-wrapper" id="radar-wrapper">
     <div class="radar-zoom-hint" id="radar-zoom-hint">🔍 滾輪縮放 · 拖曳移動 · 雙擊還原</div>
-    <img id="radar-image" class="radar-image"
-         src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png"
-         alt="林園雷達回波圖" onerror="handleRadarImageError()">
+    
+    <!-- 🆕 新增 canvas 容器 -->
+    <div class="radar-canvas" id="radar-canvas">
+        <img id="radar-image" class="radar-image"
+             src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png"
+             alt="林園雷達回波圖" onerror="handleRadarImageError()">
+        
+        <!-- 🆕 公司標記 -->
+        <div class="company-marker" id="company-marker">
+            <div class="marker-pulse-ring"></div>
+            <div class="marker-dot"></div>
+            <div class="marker-label">📍 台南廠</div>
+        </div>
+    </div>
 </div>
+
         </div>
 
     </div>
@@ -1255,6 +1378,34 @@ window.addEventListener('load', () => {
 </html>
 
     <script>
+
+// === 公司位置設定 ===
+const COMPANY_LAT = 23.11812836873932;   // 台南廠緯度
+const COMPANY_LNG = 120.27846003872382;  // 台南廠經度
+const RADAR_CENTER_LAT = 22.53;          // 林園雷達緯度
+const RADAR_CENTER_LNG = 120.38;         // 林園雷達經度
+const RADAR_RANGE_KM = 150;              // 雷達範圍 km
+
+// 計算公司在雷達圖上的位置(%)
+function setCompanyMarkerPosition() {
+    const dy = (COMPANY_LAT - RADAR_CENTER_LAT) * 111;  // 南北 km
+    const dx = (COMPANY_LNG - RADAR_CENTER_LNG) * 111 *
+               Math.cos(RADAR_CENTER_LAT * Math.PI / 180);  // 東西 km
+
+    const xPercent = 50 + (dx / RADAR_RANGE_KM) * 50;
+    const yPercent = 50 - (dy / RADAR_RANGE_KM) * 50;  // y 軸反向
+
+    const marker = document.getElementById('company-marker');
+    if (marker) {
+        marker.style.left = xPercent + '%';
+        marker.style.top = yPercent + '%';
+    }
+}
+
+// 頁面載入時設定位置
+window.addEventListener('load', setCompanyMarkerPosition);
+
+
         const API_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&StationId=CAN090&StationName=%E5%9C%8B%E4%B8%89S342K';
         const RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png';
 async function loadRadarInfo() {
@@ -1770,9 +1921,10 @@ function toggleOutdoorMode() {
 // === 🔍 雷達圖縮放功能 ===
 (function setupRadarZoom() {
     const wrapper = document.getElementById('radar-wrapper');
-    const img = document.getElementById('radar-image');
+    const canvas = document.getElementById('radar-canvas');   // 🆕 改抓 canvas
+    const marker = document.getElementById('company-marker'); // 🆕 抓 marker
     const hint = document.getElementById('radar-zoom-hint');
-    if (!wrapper || !img) return;
+    if (!wrapper || !canvas) return;
 
     let scale = 1;
     let translateX = 0;
@@ -1786,7 +1938,14 @@ function toggleOutdoorMode() {
     const ZOOM_SPEED = 0.2;
 
     function applyTransform() {
-        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        // 🆕 改套用到 canvas(image + marker 都一起轉)
+        canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        
+        // 🆕 反向縮放 marker,讓它大小固定不變
+        if (marker) {
+            marker.style.transform = `scale(${1/scale})`;
+        }
+        
         if (scale > 1) {
             wrapper.classList.add('zoomed');
             if (hint) hint.textContent = `🔍 ${scale.toFixed(1)}x · 雙擊還原`;
@@ -1803,35 +1962,27 @@ function toggleOutdoorMode() {
         applyTransform();
     }
 
-    // 滾輪縮放(以滑鼠位置為中心)
+    // 滾輪縮放
     wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
-
         const rect = wrapper.getBoundingClientRect();
         const mouseX = e.clientX - rect.left - rect.width / 2;
         const mouseY = e.clientY - rect.top - rect.height / 2;
-
         const delta = e.deltaY < 0 ? ZOOM_SPEED : -ZOOM_SPEED;
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
-
         if (newScale === scale) return;
-
-        // 以滑鼠位置為中心縮放
         const scaleRatio = newScale / scale;
         translateX = mouseX - (mouseX - translateX) * scaleRatio;
         translateY = mouseY - (mouseY - translateY) * scaleRatio;
         scale = newScale;
-
-        // 縮回原本大小時自動置中
         if (scale === 1) {
             translateX = 0;
             translateY = 0;
         }
-
         applyTransform();
     }, { passive: false });
 
-    // 拖曳開始
+    // 拖曳
     wrapper.addEventListener('mousedown', (e) => {
         if (scale <= 1) return;
         isDragging = true;
@@ -1840,11 +1991,10 @@ function toggleOutdoorMode() {
         startY = e.clientY;
         startTransX = translateX;
         startTransY = translateY;
-        img.style.transition = 'none';
+        canvas.style.transition = 'none';   // 🆕 改 canvas
         e.preventDefault();
     });
 
-    // 拖曳移動(綁在 document 上,即使滑出 wrapper 也能繼續拖)
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         translateX = startTransX + (e.clientX - startX);
@@ -1852,15 +2002,13 @@ function toggleOutdoorMode() {
         applyTransform();
     });
 
-    // 拖曳結束
     document.addEventListener('mouseup', () => {
         if (!isDragging) return;
         isDragging = false;
         wrapper.classList.remove('dragging');
-        img.style.transition = 'transform 0.15s ease-out';
+        canvas.style.transition = 'transform 0.15s ease-out';   // 🆕 改 canvas
     });
 
-    // 雙擊還原
     wrapper.addEventListener('dblclick', reset);
 })();
 
