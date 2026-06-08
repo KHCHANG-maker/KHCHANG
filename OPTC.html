@@ -32,7 +32,7 @@ body {
     padding: 12px;
 }
 
-/* 主佈局:兩欄 */
+/* === 主佈局 === */
 .main-layout {
     height: calc(100vh - 24px);
     display: grid;
@@ -43,8 +43,181 @@ body {
     min-height: 0;
 }
 
-/* === 歷史紀錄 === */
+.left-col {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    gap: 10px;
+    min-height: 0;
+    overflow: hidden;
+}
 
+#error-container:empty,
+.heat-index-grid:empty {
+    display: none;
+}
+
+/* === 站點橫條 === */
+.station-bar {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 14px 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    display: grid;
+    grid-template-columns: auto 1.3fr 1.1fr 1.1fr 1.2fr 1.2fr;
+    gap: 18px;
+    align-items: center;
+}
+
+.station-bar-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding-left: 18px;
+}
+
+.station-bar-block:first-child {
+    border-left: none;
+    padding-left: 0;
+}
+
+.station-bar-label {
+    font-size: 0.7em;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.station-bar-value {
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1.3;
+}
+
+.station-bar-main { text-align: center; }
+.station-bar-main .station-bar-value { font-size: 1.4em; }
+.station-bar-icon { font-size: 1.6em; }
+
+/* === 觀測卡片 === */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 6px 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+    border-top: 3px solid var(--primary);
+    text-align: center;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
+
+.card-title {
+    color: var(--primary);
+    font-size: 0.88em;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 2px;
+    opacity: 0.85;
+}
+
+.card-value {
+    font-size: 1.9em;
+    font-weight: bold;
+    color: var(--primary-dark);
+    line-height: 1.15;
+}
+
+.card-unit {
+    font-size: 0.85em;
+    color: var(--text-sub);
+}
+
+/* === 熱指數 + 詳細 === */
+.heat-index-container,
+.details-container {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+}
+
+.heat-index-title,
+.details-title {
+    color: var(--primary);
+    font-size: 0.9em;
+    margin-bottom: 6px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.heat-main-box {
+    padding: 18px 20px;
+    border-radius: 12px;
+    color: white;
+    background: linear-gradient(135deg, #4DA6D6, #1e5a96);
+    box-shadow: 0 6px 18px rgba(77,166,214,0.25);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: center;
+}
+
+.heat-main-box.level-1 { background: linear-gradient(135deg, #059669, #047857); }
+.heat-main-box.level-2 { background: linear-gradient(135deg, #e6b800, #cc9900); }
+.heat-main-box.level-3 { background: linear-gradient(135deg, #ea580c, #c2410c); }
+.heat-main-box.level-4 { background: linear-gradient(135deg, #dc2626, #991b1b); }
+
+.heat-main-left {
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.3);
+    padding-right: 16px;
+}
+
+.heat-main-title { font-size: 0.88em; opacity: 0.95; }
+.heat-main-value { font-size: 2.2em; font-weight: 800; line-height: 1; }
+.heat-main-meta { font-size: 0.95em; opacity: 0.97; line-height: 1.7; }
+
+/* === 詳細觀測 === */
+.detail-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.detail-item {
+    padding: 6px 10px;
+    background: var(--bg-light);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.detail-label {
+    font-size: 0.78em;
+    color: var(--text-sub);
+    margin-bottom: 2px;
+}
+
+.detail-value {
+    font-size: 1em;
+    font-weight: bold;
+    color: var(--primary-dark);
+    line-height: 1.2;
+}
+
+/* === 歷史紀錄 === */
 .history-container {
     background: white;
     border-radius: 12px;
@@ -83,13 +256,6 @@ body {
     align-items: center;
 }
 
-.history-chart-wrapper {
-    flex: 1;
-    min-height: 0;
-    position: relative;
-}
-
-/* === 歷史紀錄 - 補充樣式 === */
 .history-stat {
     color: var(--primary-dark);
     display: inline-flex;
@@ -97,19 +263,9 @@ body {
     gap: 4px;
 }
 
-.history-stat-label {
-    color: var(--text-sub);
-    font-size: 0.95em;
-}
-
-.history-stat-value {
-    font-weight: bold;
-    font-size: 1.05em;
-}
-
-.history-stat.heat .history-stat-value {
-    color: #dc2626;
-}
+.history-stat-label { color: var(--text-sub); font-size: 0.95em; }
+.history-stat-value { font-weight: bold; font-size: 1.05em; }
+.history-stat.heat .history-stat-value { color: #dc2626; }
 
 .history-clear-btn {
     background: white;
@@ -127,6 +283,12 @@ body {
     color: white;
 }
 
+.history-chart-wrapper {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
 .history-empty {
     height: 100%;
     display: flex;
@@ -140,240 +302,11 @@ body {
     padding: 20px;
 }
 
-
-/* 頂部資訊橫條:站名 + 位置 + 座標 + ID + 更新時間 */
-.station-bar {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-    color: white;
-    border-radius: 12px;
-    padding: 14px 20px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    display: grid;
-    grid-template-columns: auto 1.3fr 1.1fr 1.1fr 1.2fr 1.2fr;  /* 6 欄:icon + 站名 + 位置 + 座標 + 觀測時間 + 雷達時間 */
-    gap: 18px;
-    align-items: center;
-}
-
-.station-bar-block {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    border-left: 1px solid rgba(255,255,255,0.3);
-    padding-left: 18px;
-}
-
-.station-bar-block:first-child {
-    border-left: none;
-    padding-left: 0;
-}
-
-.station-bar-label {
-    font-size: 0.7em;
-    opacity: 0.85;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.station-bar-value {
-    font-size: 1em;
-    font-weight: bold;
-    line-height: 1.3;
-}
-
-.station-bar-main {
-    text-align: center;
-}
-
-.station-bar-main .station-bar-value {
-    font-size: 1.4em;
-}
-
-.station-bar-icon {
-    font-size: 1.6em;
-}
-
-.station-bar-times {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    font-size: 0.78em;
-}
-
-.station-bar-times span {
-    opacity: 0.95;
-}
-
-.station-bar-times .time-label {
-    opacity: 0.75;
-    margin-right: 4px;
-}
-
-
-
-/* 觀測卡片區:flex:1 撐滿剩餘空間 */
-.dashboard {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    /* 移除 flex:1 和 min-height:0 */
-}
-
-.card {
-    background: white;
-    border-radius: 12px;
-    padding: 6px 8px;          /* 10 → 6,變矮 */
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    transition: transform 0.3s ease;
-    border-top: 3px solid var(--primary);
-    text-align: center;
-}
-
-/* 觀測卡片 */
-.card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-}
-
-.card-title {
-    color: var(--primary);
-    font-size: 0.88em;         /* 0.78 → 0.88 變大 */
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 2px;        /* 4 → 2 */
-    opacity: 0.85;
-}
-
-.card-value {
-    font-size: 1.9em;          /* 1.5 → 1.9 變大 */
-    font-weight: bold;
-    color: var(--primary-dark);
-    line-height: 1.15;
-}
-
-.card-unit {
-    font-size: 0.85em;         /* 0.75 → 0.85 變大 */
-    color: var(--text-sub);
-}
-
-
-.left-col {
-    display: grid;
-    grid-template-rows: 
-        auto                  /* 站點橫條 */
-        auto                  /* 熱指數 */
-        auto                  /* dashboard 9 卡 */
-        minmax(0, 1fr)        /* ⭐ 歷史圖表(吃剩餘空間)*/
-        auto                  /* 詳細數據 */
-        auto;                 /* 底部按鈕 */
-    gap: 10px;
-    min-height: 0;
-    overflow: hidden;
-}
-
-#error-container:empty {
-    display: none;
-}
-
-
-
-/* 熱指數 + 詳細 */
-.heat-index-container,
-.details-container {
-    background: white;
-    border-radius: 12px;
-    padding: 10px 14px;        /* 14 → 10 14 */
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-    border: 1px solid var(--border-light);
-}
-
-#error-container:empty,
-.heat-index-grid:empty {
-    display: none;
-}
-
-.heat-index-title,
-.details-title {
-    color: var(--primary);
-    font-size: 0.9em;          /* 0.95 → 0.9 */
-    margin-bottom: 6px;        /* 10 → 6 */
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.heat-main-box {
-    padding: 18px 20px;        /* 10 14 → 18 20 變高 */
-    border-radius: 12px;
-    color: white;
-    background: linear-gradient(135deg, #4DA6D6, #1e5a96);
-    box-shadow: 0 6px 18px rgba(77,166,214,0.25);
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 18px;
-    align-items: center;
-}
-
-.heat-main-box.level-1 { background: linear-gradient(135deg, #059669, #047857); }
-.heat-main-box.level-2 { background: linear-gradient(135deg, #e6b800, #cc9900); }
-.heat-main-box.level-3 { background: linear-gradient(135deg, #ea580c, #c2410c); }
-.heat-main-box.level-4 { background: linear-gradient(135deg, #dc2626, #991b1b); }
-
-.heat-main-left {
-    text-align: center;
-    border-right: 1px solid rgba(255,255,255,0.3);
-    padding-right: 16px;
-}
-
-.heat-main-title { 
-    font-size: 0.88em;         /* 0.78 → 0.88 略大 */
-    opacity: 0.95; 
-}
-
-.heat-main-value {
-    font-size: 2.2em;          /* 1.7 → 2.2 變大 */
-    font-weight: 800;
-    line-height: 1;
-}
-
-.heat-main-meta {
-    font-size: 0.95em;         /* 0.85 → 0.95 略大 */
-    opacity: 0.97;
-    line-height: 1.7;
-}
-
-/* 詳細觀測:緊湊版 */
-.detail-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-}
-
-.detail-item {
-    padding: 6px 10px;         /* 8 12 → 6 10 */
-    background: var(--bg-light);
-    border-radius: 8px;
-    border-left: 3px solid var(--primary);
-}
-
-.detail-label {
-    font-size: 0.78em;         /* 0.85 → 0.78 */
-    color: var(--text-sub);
-    margin-bottom: 2px;        /* 3 → 2 */
-}
-
-.detail-value {
-    font-size: 1em;            /* 1.1 → 1 */
-    font-weight: bold;
-    color: var(--primary-dark);
-    line-height: 1.2;          /* 1.3 → 1.2 */
-}
-
-/* 底部更新區 */
+/* === 底部更新區 === */
 .update-section {
     background: white;
     border-radius: 12px;
-    padding: 8px 14px;         /* 10 16 → 8 14 */
+    padding: 8px 14px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     display: flex;
     align-items: center;
@@ -382,7 +315,7 @@ body {
 
 .update-time {
     color: var(--primary-dark);
-    font-size: 0.8em;          /* 0.85 → 0.8 */
+    font-size: 0.8em;
     flex: 1;
 }
 
@@ -390,12 +323,12 @@ body {
     background: white;
     color: var(--primary);
     border: 2px solid var(--primary);
-    padding: 6px 16px;         /* 7 18 → 6 16 */
+    padding: 6px 16px;
     border-radius: 20px;
     cursor: pointer;
     font-weight: bold;
     transition: all 0.3s ease;
-    font-size: 0.8em;          /* 0.85 → 0.8 */
+    font-size: 0.8em;
     white-space: nowrap;
 }
 
@@ -405,7 +338,16 @@ body {
     transform: scale(1.03);
 }
 
-/* === 右欄:雷達 === */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--primary-dark);
+    font-size: 1.2em;
+}
+
+/* ============================================ */
+/* === 雷達回波區 === */
+/* ============================================ */
 .radar-container {
     background: white;
     border-radius: 12px;
@@ -449,35 +391,33 @@ body {
     align-items: center;
     background: var(--bg-light);
     border-radius: 10px;
-    overflow: hidden;          /* 重要:超出範圍隱藏 */
+    overflow: hidden;
     padding: 6px;
-    position: relative;        /* 🆕 給縮放提示用 */
-    cursor: zoom-in;           /* 🆕 滑鼠變放大鏡 */
+    position: relative;
+    cursor: zoom-in;
 }
 
-.radar-image-wrapper.zoomed {
-    cursor: grab;              /* 放大後變成可拖曳 */
-}
+.radar-image-wrapper.zoomed { cursor: grab; }
+.radar-image-wrapper.dragging { cursor: grabbing; }
 
-.radar-image-wrapper.dragging {
-    cursor: grabbing;
+.radar-canvas {
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+    transition: transform 0.15s ease-out;
+    transform-origin: center center;
 }
 
 .radar-image {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
+    width: 100%;
+    height: 100%;
     display: block;
     border-radius: 8px;
-    transition: transform 0.15s ease-out;  /* 🆕 平滑縮放動畫 */
-    transform-origin: center center;
-    user-select: none;         /* 拖曳時不選取圖片 */
-    -webkit-user-drag: none;   /* 不要觸發系統拖曳 */
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
-/* 縮放提示(右上角)*/
 .radar-zoom-hint {
     position: absolute;
     top: 10px;
@@ -493,73 +433,137 @@ body {
     z-index: 5;
 }
 
-.radar-image-wrapper:hover .radar-zoom-hint {
-    opacity: 1;
-}
+.radar-image-wrapper:hover .radar-zoom-hint { opacity: 1; }
 
 .radar-image-wrapper.zoomed .radar-zoom-hint {
     opacity: 1;
     background: rgba(220, 38, 38, 0.85);
 }
 
-/* 戶外模式適配 */
-body.outdoor-mode .radar-zoom-hint {
-    background: rgba(96, 165, 250, 0.9);
-    color: #0f1e2e;
+/* ============================================ */
+/* === 公司位置標記 === */
+/* ============================================ */
+.company-marker {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 10;
 }
 
-.loading {
-    text-align: center;
-    padding: 40px;
-    color: var(--primary-dark);
-    font-size: 1.2em;
+.marker-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: rgba(30, 90, 150, 0.7);
+    border: 2.5px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 8px rgba(30, 90, 150, 0.9), 0 2px 4px rgba(0,0,0,0.4);
+    z-index: 2;
+    transform-origin: center center;
+    transition: transform 0.15s ease-out;
+}
+
+.marker-pulse-ring {
+    position: absolute;
+    margin-left: -7px;
+    margin-top: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(30, 90, 150, 0.8) 0%, rgba(30, 90, 150, 0) 70%);
+    animation: markerPulse 1.5s ease-out infinite;
+    z-index: 1;
+}
+
+@keyframes markerPulse {
+    0% {
+        width: 14px;
+        height: 14px;
+        margin-left: -7px;
+        margin-top: -7px;
+        opacity: 1;
+    }
+    100% {
+        width: 80px;
+        height: 80px;
+        margin-left: -40px;
+        margin-top: -40px;
+        opacity: 0;
+    }
+}
+
+.marker-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(30, 90, 150, 0.75);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.5);
+    transform-origin: 50% 100%;
+    transition: transform 0.15s ease-out;
+}
+
+.marker-label::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(30, 90, 150, 0.75);
 }
 
 /* ============================================ */
-/* === 📱 平板(寬 ≤ 1024px)=== */
+/* === 平板(寬 ≤ 1024px)=== */
 /* ============================================ */
 @media (max-width: 1024px) {
     html, body {
         overflow: auto;
         height: auto;
     }
-    
-    body {
-        padding: 8px;
-    }
-    
+
+    body { padding: 8px; }
+
     .main-layout {
         height: auto;
         grid-template-columns: 1fr;
         gap: 10px;
     }
-    
+
     .left-col {
         display: flex;
         flex-direction: column;
         overflow: visible;
     }
-    
-    .radar-image-wrapper {
-        min-height: 450px;
-    }
+
+    .radar-image-wrapper { min-height: 450px; }
 }
 
 /* ============================================ */
-/* === 📱 手機(寬 ≤ 768px)=== */
+/* === 手機(寬 ≤ 768px)=== */
 /* ============================================ */
 @media (max-width: 768px) {
-    body {
-        padding: 6px;
-    }
-    
-    /* 站點橫條:改成 2 欄 */
+    body { padding: 6px; }
+
+    /* 站點橫條改 2 欄 */
     .station-bar {
         grid-template-columns: auto 1fr;
         gap: 10px;
         padding: 12px 14px;
     }
-    
+
     .station-bar-block {
         border-left: none;
         padding-left: 0;
@@ -567,220 +571,181 @@ body.outdoor-mode .radar-zoom-hint {
         padding-top: 8px;
         grid-column: span 2;
     }
-    
+
     .station-bar-block:first-child,
     .station-bar-main {
         border-top: none;
         padding-top: 0;
         grid-column: span 2;
     }
-    
+
     .station-bar-icon {
         grid-column: 1;
         font-size: 1.4em;
     }
-    
+
     .station-bar-main {
         grid-column: 2;
         text-align: left;
     }
-    
-    .station-bar-main .station-bar-value {
-        font-size: 1.2em;
-    }
-    
-    /* 9 張卡片改 2 欄(更易讀)*/
+
+    .station-bar-main .station-bar-value { font-size: 1.2em; }
+
+    /* 9 張卡片改 2 欄 */
     .dashboard {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
     }
-    
-    .card {
-        padding: 10px 8px;
-    }
-    
-    .card-value {
-        font-size: 1.6em;
-    }
-    
-    /* 熱指數:改成上下排列 */
+
+    .card { padding: 10px 8px; }
+    .card-value { font-size: 1.6em; }
+
+    /* 熱指數改上下排列 */
     .heat-main-box {
         grid-template-columns: 1fr;
         gap: 10px;
         padding: 14px;
         text-align: center;
     }
-    
+
     .heat-main-left {
         border-right: none;
         border-bottom: 1px solid rgba(255,255,255,0.3);
         padding-right: 0;
         padding-bottom: 10px;
     }
-    
-    .heat-main-value {
-        font-size: 2em;
-    }
-    
-    .heat-main-meta {
-        font-size: 0.9em;
-        text-align: center;
-    }
-    
-    /* 詳細數據:改 2 欄 */
+
+    .heat-main-value { font-size: 2em; }
+    .heat-main-meta { font-size: 0.9em; text-align: center; }
+
+    /* 詳細數據改 2 欄 */
     .detail-row {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
     }
-    
-    .detail-item {
-        padding: 8px 10px;
-    }
-    
-    .detail-value {
-        font-size: 0.95em;
-    }
-    
-    /* 雷達資訊:改成 1 欄 */
+
+    .detail-item { padding: 8px 10px; }
+    .detail-value { font-size: 0.95em; }
+
+    /* 雷達資訊改 1 欄 */
     .radar-info {
         grid-template-columns: 1fr;
         gap: 6px;
         font-size: 0.85em;
     }
-    
-    .radar-image-wrapper {
-        min-height: 350px;
-    }
-    
+
+    .radar-image-wrapper { min-height: 350px; }
+
     /* 歷史圖表 */
-    .history-container {
-        min-height: 280px;
-    }
-    
-    .history-chart-wrapper {
-        min-height: 220px;
-    }
-    
+    .history-container { min-height: 280px; }
+    .history-chart-wrapper { min-height: 220px; }
+
     .history-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 6px;
     }
-    
+
     .history-stats {
         width: 100%;
         justify-content: space-between;
     }
-    
-    /* 底部按鈕:改成多行排列 */
+
+    /* 底部按鈕改直向 */
     .update-section {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
         padding: 10px;
     }
-    
-    .update-time {
-        text-align: center;
-    }
-    
+
+    .update-time { text-align: center; }
+
     .refresh-btn {
         width: 100%;
         padding: 10px;
         font-size: 0.9em;
     }
-    
-    /* 標題字大小 */
+
     .heat-index-title,
     .details-title,
     .history-title,
-    .radar-title {
-        font-size: 1em;
+    .radar-title { font-size: 1em; }
+
+    /* 標記縮小(手機版)*/
+    .marker-dot {
+        width: 5px;
+        height: 5px;
+        margin-left: -2.5px;
+        margin-top: -2.5px;
+        border-width: 1.5px;
+    }
+
+    .marker-pulse-ring {
+        width: 5px;
+        height: 5px;
+        margin-left: -2.5px;
+        margin-top: -2.5px;
+        animation-name: markerPulseMobile;
+    }
+
+    .marker-label {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .marker-label::after {
+        border-left-width: 4px;
+        border-right-width: 4px;
+        border-top-width: 4px;
+        bottom: -4px;
+    }
+}
+
+@keyframes markerPulseMobile {
+    0% {
+        width: 5px;
+        height: 5px;
+        margin-left: -2.5px;
+        margin-top: -2.5px;
+        opacity: 1;
+    }
+    100% {
+        width: 36px;
+        height: 36px;
+        margin-left: -18px;
+        margin-top: -18px;
+        opacity: 0;
     }
 }
 
 /* ============================================ */
-/* === 📱 小手機(寬 ≤ 480px)=== */
+/* === 小手機(寬 ≤ 480px)=== */
 /* ============================================ */
 @media (max-width: 480px) {
-    /* 9 張卡片改回 1 欄太佔空間,維持 2 欄,但縮小 */
     .dashboard {
         grid-template-columns: repeat(2, 1fr);
         gap: 6px;
     }
-    
-    .card-title {
-        font-size: 0.78em;
-    }
-    
-    .card-value {
-        font-size: 1.4em;
-    }
-    
-    .card-unit {
-        font-size: 0.75em;
-    }
-    
-    /* 詳細數據改 1 欄(時間欄位太長)*/
-    .detail-row {
-        grid-template-columns: 1fr;
-    }
-    
-    /* 雷達圖小一點 */
-    .radar-image-wrapper {
-        min-height: 280px;
-    }
-    
-    /* 站點橫條更精簡 */
-    .station-bar-label {
-        font-size: 0.65em;
-    }
-    
-    .station-bar-value {
-        font-size: 0.9em;
-    }
-    
-    /* 熱指數數字 */
-    .heat-main-value {
-        font-size: 1.7em;
-    }
+
+    .card-title { font-size: 0.78em; }
+    .card-value { font-size: 1.4em; }
+    .card-unit { font-size: 0.75em; }
+
+    .detail-row { grid-template-columns: 1fr; }
+    .radar-image-wrapper { min-height: 280px; }
+    .station-bar-label { font-size: 0.65em; }
+    .station-bar-value { font-size: 0.9em; }
+    .heat-main-value { font-size: 1.7em; }
 }
 
-/* === 歷史趨勢 Modal === */
-
-
-.clear-btn {
-    background: white;
-    color: #dc2626;
-    border: 1.5px solid #dc2626;
-    padding: 5px 14px;
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: 0.85em;
-    transition: all 0.2s;
-}
-
-.clear-btn:hover {
-    background: #dc2626;
-    color: white;
-}
-
-.chart-empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-sub);
-    font-size: 1.1em;
-}
-
-
-/* ============================================== */
-/* === 🌞 戶外模式(深色高對比)=== */
-/* ============================================== */
+/* ============================================ */
+/* === 戶外模式(深色高對比)=== */
+/* ============================================ */
 body.outdoor-mode {
     background: linear-gradient(135deg, #0f1e2e 0%, #1a3050 100%);
 }
 
-/* 卡片類:深底白字 */
 body.outdoor-mode .card,
 body.outdoor-mode .heat-index-container,
 body.outdoor-mode .details-container,
@@ -792,11 +757,8 @@ body.outdoor-mode .update-section {
     box-shadow: 0 6px 20px rgba(0,0,0,0.5);
 }
 
-body.outdoor-mode .card {
-    border-top-color: #60a5fa;
-}
+body.outdoor-mode .card { border-top-color: #60a5fa; }
 
-/* 標題類:亮藍 */
 body.outdoor-mode .card-title,
 body.outdoor-mode .heat-index-title,
 body.outdoor-mode .details-title,
@@ -807,7 +769,6 @@ body.outdoor-mode .radar-info-label {
     opacity: 1;
 }
 
-/* 主要數值:純白粗體(主要卡片用)*/
 body.outdoor-mode .card-value,
 body.outdoor-mode #heat-temperature,
 body.outdoor-mode #heat-humidity {
@@ -816,14 +777,11 @@ body.outdoor-mode #heat-humidity {
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-/* 詳細數據用一般粗體即可,避免擠成兩行 */
 body.outdoor-mode .detail-value {
     color: #ffffff;
     font-weight: bold;
-    /* 移除 text-shadow,避免字寬變化 */
 }
 
-/* 副標籤:略亮灰 */
 body.outdoor-mode .card-unit,
 body.outdoor-mode .detail-label,
 body.outdoor-mode .update-time,
@@ -831,13 +789,11 @@ body.outdoor-mode .radar-info-item {
     color: #cbd5e1;
 }
 
-/* 詳細數據小卡片 */
 body.outdoor-mode .detail-item {
     background: #0f172a;
     border-left-color: #60a5fa;
 }
 
-/* 站點橫條 */
 body.outdoor-mode .station-bar {
     background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
     box-shadow: 0 6px 20px rgba(0,0,0,0.5);
@@ -848,16 +804,9 @@ body.outdoor-mode .station-bar-label {
     color: #bfdbfe;
 }
 
-/* 雷達區塊 */
-body.outdoor-mode .radar-image-wrapper {
-    background: #0f172a;
-}
+body.outdoor-mode .radar-image-wrapper { background: #0f172a; }
+body.outdoor-mode .radar-info { border-bottom-color: #3b82f6; }
 
-body.outdoor-mode .radar-info {
-    border-bottom-color: #3b82f6;
-}
-
-/* 按鈕 */
 body.outdoor-mode .refresh-btn {
     background: #1a2940;
     color: #60a5fa;
@@ -869,18 +818,9 @@ body.outdoor-mode .refresh-btn:hover {
     color: #0f1e2e;
 }
 
-/* 歷史紀錄區 */
-body.outdoor-mode .history-stat-label {
-    color: #cbd5e1;
-}
-
-body.outdoor-mode .history-stat-value {
-    color: #ffffff;
-}
-
-body.outdoor-mode .history-stat.heat .history-stat-value {
-    color: #f87171;
-}
+body.outdoor-mode .history-stat-label { color: #cbd5e1; }
+body.outdoor-mode .history-stat-value { color: #ffffff; }
+body.outdoor-mode .history-stat.heat .history-stat-value { color: #f87171; }
 
 body.outdoor-mode .history-clear-btn {
     background: #1a2940;
@@ -893,18 +833,17 @@ body.outdoor-mode .history-clear-btn:hover {
     color: #1a2940;
 }
 
-body.outdoor-mode .history-empty {
-    color: #cbd5e1;
-}
+body.outdoor-mode .history-empty { color: #cbd5e1; }
 
-/* 熱指數框 - 在戶外模式中加強光暈 */
 body.outdoor-mode .heat-main-box {
     box-shadow: 0 0 30px rgba(255, 165, 0, 0.4), 0 6px 18px rgba(0,0,0,0.5);
 }
 
-/* 載入畫面 */
-body.outdoor-mode .loading {
-    color: #60a5fa;
+body.outdoor-mode .loading { color: #60a5fa; }
+
+body.outdoor-mode .radar-zoom-hint {
+    background: rgba(96, 165, 250, 0.9);
+    color: #0f1e2e;
 }
 
 
@@ -1101,9 +1040,19 @@ body.outdoor-mode .loading {
             </div>
 <div class="radar-image-wrapper" id="radar-wrapper">
     <div class="radar-zoom-hint" id="radar-zoom-hint">🔍 滾輪縮放 · 拖曳移動 · 雙擊還原</div>
-    <img id="radar-image" class="radar-image"
-         src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-002.png"
-         alt="南屯雷達回波圖" onerror="handleRadarImageError()">
+    
+    <div class="radar-canvas" id="radar-canvas">
+        <img id="radar-image" class="radar-image"
+             src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-002.png"
+             alt="南屯雷達回波圖" onerror="handleRadarImageError()">
+        
+        <!-- 公司位置標記 -->
+        <div class="company-marker" id="company-marker">
+            <div class="marker-pulse-ring"></div>
+            <div class="marker-dot"></div>
+            <div class="marker-label">📍 台中廠</div>
+        </div>
+    </div>
 </div>
         </div>
 
@@ -1111,6 +1060,33 @@ body.outdoor-mode .loading {
 </div>
 
 <script>
+
+// === 公司位置設定(台中廠)===
+const COMPANY_LAT = 24.199029023806325;   // 台中廠緯度
+const COMPANY_LNG = 120.61770622841429;   // 台中廠經度
+const RADAR_CENTER_LAT = 24.13;           // 南屯雷達緯度
+const RADAR_CENTER_LNG = 120.62;          // 南屯雷達經度
+const RADAR_RANGE_KM = 150;
+
+// 計算公司在雷達圖上的位置(%)
+function setCompanyMarkerPosition() {
+    const dy = (COMPANY_LAT - RADAR_CENTER_LAT) * 111;
+    const dx = (COMPANY_LNG - RADAR_CENTER_LNG) * 111 *
+               Math.cos(RADAR_CENTER_LAT * Math.PI / 180);
+
+    const xPercent = 50 + (dx / RADAR_RANGE_KM) * 50;
+    const yPercent = 50 - (dy / RADAR_RANGE_KM) * 50;
+
+    const marker = document.getElementById('company-marker');
+    if (marker) {
+        marker.style.left = xPercent + '%';
+        marker.style.top = yPercent + '%';
+    }
+}
+
+window.addEventListener('load', setCompanyMarkerPosition);
+
+
 // === 歷史資料儲存與圖表(內嵌版,多站獨立)===
 const HOURS_24_MS = 24 * 60 * 60 * 1000;
 let historyChart = null;
@@ -1767,12 +1743,13 @@ function toggleOutdoorMode() {
 })();
 
 
-// === 🔍 雷達圖縮放功能 ===
+// === 雷達圖縮放功能 ===
 (function setupRadarZoom() {
     const wrapper = document.getElementById('radar-wrapper');
-    const img = document.getElementById('radar-image');
+    const canvas = document.getElementById('radar-canvas');
+    const marker = document.getElementById('company-marker');
     const hint = document.getElementById('radar-zoom-hint');
-    if (!wrapper || !img) return;
+    if (!wrapper || !canvas) return;
 
     let scale = 1;
     let translateX = 0;
@@ -1786,7 +1763,22 @@ function toggleOutdoorMode() {
     const ZOOM_SPEED = 0.2;
 
     function applyTransform() {
-        img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+
+        if (marker) {
+            const inverseScale = 1 / scale;
+            const dot = marker.querySelector('.marker-dot');
+            const label = marker.querySelector('.marker-label');
+
+            if (dot) dot.style.transform = `scale(${inverseScale})`;
+
+            if (label) {
+                const baseGap = window.innerWidth <= 768 ? 5 : 14;
+                const gap = baseGap * inverseScale;
+                label.style.transform = `translate(-50%, calc(-100% - ${gap}px)) scale(${inverseScale})`;
+            }
+        }
+
         if (scale > 1) {
             wrapper.classList.add('zoomed');
             if (hint) hint.textContent = `🔍 ${scale.toFixed(1)}x · 雙擊還原`;
@@ -1803,31 +1795,23 @@ function toggleOutdoorMode() {
         applyTransform();
     }
 
-    // 滾輪縮放(以滑鼠位置為中心)
+    // 滾輪縮放
     wrapper.addEventListener('wheel', (e) => {
         e.preventDefault();
-
         const rect = wrapper.getBoundingClientRect();
         const mouseX = e.clientX - rect.left - rect.width / 2;
         const mouseY = e.clientY - rect.top - rect.height / 2;
-
         const delta = e.deltaY < 0 ? ZOOM_SPEED : -ZOOM_SPEED;
         const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
-
         if (newScale === scale) return;
-
-        // 以滑鼠位置為中心縮放
         const scaleRatio = newScale / scale;
         translateX = mouseX - (mouseX - translateX) * scaleRatio;
         translateY = mouseY - (mouseY - translateY) * scaleRatio;
         scale = newScale;
-
-        // 縮回原本大小時自動置中
         if (scale === 1) {
             translateX = 0;
             translateY = 0;
         }
-
         applyTransform();
     }, { passive: false });
 
@@ -1840,11 +1824,10 @@ function toggleOutdoorMode() {
         startY = e.clientY;
         startTransX = translateX;
         startTransY = translateY;
-        img.style.transition = 'none';
+        canvas.style.transition = 'none';
         e.preventDefault();
     });
 
-    // 拖曳移動(綁在 document 上,即使滑出 wrapper 也能繼續拖)
     document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
         translateX = startTransX + (e.clientX - startX);
@@ -1852,16 +1835,21 @@ function toggleOutdoorMode() {
         applyTransform();
     });
 
-    // 拖曳結束
     document.addEventListener('mouseup', () => {
         if (!isDragging) return;
         isDragging = false;
         wrapper.classList.remove('dragging');
-        img.style.transition = 'transform 0.15s ease-out';
+        canvas.style.transition = 'transform 0.15s ease-out';
     });
 
     // 雙擊還原
     wrapper.addEventListener('dblclick', reset);
-})();
 
+    // 初始化標籤位置
+    if (document.readyState === 'complete') {
+        applyTransform();
+    } else {
+        window.addEventListener('load', applyTransform);
+    }
+})();
     </script>
