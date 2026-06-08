@@ -473,9 +473,19 @@ body {
     width: 14px;
     height: 14px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(30, 90, 150, 0.8) 0%, rgba(30, 90, 150, 0) 70%);
-    animation: markerPulse 1.5s ease-out infinite;
+    background: transparent;                      /* 🔄 透明背景 */
+    border: 2px solid rgba(30, 90, 150, 0.8);    /* 🔄 加邊框 */
+    animation: markerPulse 2.7s ease-out infinite;
     z-index: 1;
+}
+
+/* 🆕 第二、三層光環延遲擴散 */
+.marker-pulse-ring:nth-child(2) {
+    animation-delay: 0.9s;
+}
+
+.marker-pulse-ring:nth-child(3) {
+    animation-delay: 1.8s;
 }
 
 @keyframes markerPulse {
@@ -1049,6 +1059,8 @@ body.outdoor-mode .radar-zoom-hint {
         <!-- 公司位置標記 -->
         <div class="company-marker" id="company-marker">
             <div class="marker-pulse-ring"></div>
+             <div class="marker-pulse-ring"></div>   <!-- 🆕 第二層 -->
+            <div class="marker-pulse-ring"></div>   <!-- 🆕 第三層 -->
             <div class="marker-dot"></div>
             <div class="marker-label">📍 台中廠</div>
         </div>
