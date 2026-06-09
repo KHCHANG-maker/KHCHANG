@@ -1964,6 +1964,23 @@ function toggleOutdoorMode() {
     const ZOOM_SPEED = 0.2;
 
     function applyTransform() {
+
+    // 🆕 邊界限制:不讓雷達圖被拖出可視範圍
+    if (scale > 1) {
+        const rect = wrapper.getBoundingClientRect();
+        // 圖片放大後,可移動的最大距離 = (放大後尺寸 - 容器尺寸) / 2
+        const maxX = (rect.width * (scale - 1)) / 2;
+        const maxY = (rect.height * (scale - 1)) / 2;
+        
+        // 限制 translateX 和 translateY 在可移動範圍內
+        translateX = Math.max(-maxX, Math.min(maxX, translateX));
+        translateY = Math.max(-maxY, Math.min(maxY, translateY));
+    } else {
+        // 縮放回 1x 時強制歸零(避免有殘留偏移)
+        translateX = 0;
+        translateY = 0;
+    }
+
         canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
 
         if (marker) {
