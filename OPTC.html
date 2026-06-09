@@ -100,10 +100,14 @@ body {
 .station-bar-icon { font-size: 1.6em; }
 
 /* === 觀測卡片 === */
+
 .dashboard {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 10px;
+    position: relative;                              /* 🆕 新增 */
+    border-radius: 12px;                             /* 🆕 新增 */
+    transition: background 1.5s ease, padding 0.3s ease;  /* 🆕 新增 */
 }
 
 .card {
@@ -856,19 +860,37 @@ body.outdoor-mode .radar-zoom-hint {
     color: #0f1e2e;
 }
 
+
+/* 加在「戶外模式」區塊最後 */
+body.outdoor-mode .dashboard.weather-bg-active {
+    background: linear-gradient(135deg, #1a3050 0%, #0f1e2e 100%);
+}
+
+body.outdoor-mode .dashboard.weather-bg-active.weather-sunny {
+    background: linear-gradient(135deg, #2d3748 0%, #1a3050 100%);
+}
+
+body.outdoor-mode .dashboard.weather-bg-active.weather-rain,
+body.outdoor-mode .dashboard.weather-bg-active.weather-thunder {
+    background: linear-gradient(135deg, #0f1729 0%, #1a2332 100%);
+}
+
+body.outdoor-mode .dashboard.weather-bg-active.weather-cloudy,
+body.outdoor-mode .dashboard.weather-bg-active.weather-overcast,
+body.outdoor-mode .dashboard.weather-bg-active.weather-fog {
+    background: linear-gradient(135deg, #1e2a3d 0%, #2a3a52 100%);
+}
+
 /* ============================================ */
 /* === 🌦️ 天氣動態背景(限定在 dashboard 內)=== */
 /* ============================================ */
 
 /* dashboard 啟用時:加背景 + 限制動畫範圍 */
-.dashboard {
-    position: relative;
-    overflow: hidden;
-    border-radius: 12px;
-    transition: background 1.5s ease, padding 0.3s ease;
-}
+/* 合併至第一處
 
+/* 🆕 只在啟用動態背景時才裁切 */
 .dashboard.weather-bg-active {
+    overflow: hidden;
     padding: 10px;
     background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
 }
@@ -1433,9 +1455,9 @@ function renderHistoryChart() {
     });
 }
 
-window.addEventListener('load', () => {
-    setTimeout(renderHistoryChart, 500);
-});
+
+// ⭐ 最後一行:立刻渲染一次
+renderHistoryChart();
 
 
 </script>
@@ -1542,12 +1564,22 @@ function getNestedValue(obj, path, defaultValue = '--') {
             }
         }
 
-        function handleRadarImageError() {
-            const radarImage = document.getElementById('radar-image');
-            radarImage.alt = '雷達圖像加載失敗';
-            radarImage.style.display = 'none';
-            radarImage.parentElement.innerHTML = '<p style="color: #666; padding: 20px;">無法加載雷達圖像，請稍後重試</p>';
-        }
+function handleRadarImageError() {
+    const radarImage = document.getElementById('radar-image');
+    if (!radarImage) return;
+    radarImage.alt = '雷達圖像加載失敗';
+    radarImage.style.opacity = '0.3';
+    
+    // 顯示錯誤訊息(用浮動的 div,不破壞原結構)
+    let errorMsg = document.getElementById('radar-error-msg');
+    if (!errorMsg) {
+        errorMsg = document.createElement('div');
+        errorMsg.id = 'radar-error-msg';
+        errorMsg.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#dc2626;background:white;padding:10px 20px;border-radius:8px;z-index:20;';
+        errorMsg.textContent = '無法加載雷達圖像,請稍後重試';
+        radarImage.parentElement.appendChild(errorMsg);
+    }
+}
 
         function getRiskLevel(heatIndex) {
             if (heatIndex >= 54.4) return { level: 4, text: "第四級 極度危險" };
@@ -1862,21 +1894,18 @@ applyWeatherEffect(weatherText);
             document.getElementById('max-wind-card').textContent = maxWind;
             //document.getElementById('max-wind-detail').textContent = maxWind;
 
-            const now = new Date();
-            const pageUpdateTime = now.toLocaleString('zh-TW', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
+
             
         }
 //document.getElementById('update-time').textContent = pageUpdateTime;
         function updateRadarDisplay() {
             const radarImage = document.getElementById('radar-image');
             radarImage.src = RADAR_IMAGE_URL + '?t=' + new Date().getTime();
+
+    // 🆕 加這段:成功載入時清除舊錯誤訊息
+    radarImage.style.opacity = '1';
+    const errorMsg = document.getElementById('radar-error-msg');
+    if (errorMsg) errorMsg.remove();
 
             const now = new Date();
             const radarUpdateTime = now.toLocaleString('zh-TW', {
@@ -1896,41 +1925,40 @@ applyWeatherEffect(weatherText);
 
         setInterval(fetchWeatherData, 10 * 60 * 1000);
 
-        setInterval(() => {
-            const radarImage = document.getElementById('radar-image');
-            if (radarImage) {
-                radarImage.src = RADAR_IMAGE_URL + '?t=' + new Date().getTime();
+// 立即載入一次雷達時間
+loadRadarInfo().catch(err => {
+    console.error(err);
+    document.getElementById('radarTime').textContent = '讀取失敗';
+});
 
-                const now = new Date();
-                const radarUpdateTime = now.toLocaleString('zh-TW', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit'
-                });
+// 每 1 分鐘:雷達圖刷新 + 雷達時間更新 + 頁面更新時間
+setInterval(() => {
+    // 雷達圖刷新
+    const radarImage = document.getElementById('radar-image');
+    if (radarImage) {
+        radarImage.src = RADAR_IMAGE_URL + '?t=' + Date.now();
+    }
 
-                document.getElementById('sidebar-radar-update-time').textContent = radarUpdateTime;
-                
-            }
-        }, 1 * 60 * 1000);
+    // 雷達時間 XML
+    loadRadarInfo().catch(err => {
+        console.error(err);
+        document.getElementById('radarTime').textContent = '讀取失敗';
+    });
+
+    // 頁面更新時間
+    const radarUpdateTime = new Date().toLocaleString('zh-TW', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+    document.getElementById('sidebar-radar-update-time').textContent = radarUpdateTime;
+}, 60 * 1000);
+
+
+
+
 //document.getElementById('main-radar-update-time').textContent = radarUpdateTime;
 
 
-
-
-loadRadarInfo().catch(err => {
-  console.error(err);
-  document.getElementById('radarTime').textContent = '讀取失敗';
-});
-
-setInterval(() => {
-  loadRadarInfo().catch(err => {
-    console.error(err);
-    document.getElementById('radarTime').textContent = '讀取失敗';
-  });
-}, 60 * 1000);
 
 
 // === 🌞 戶外模式切換 ===
