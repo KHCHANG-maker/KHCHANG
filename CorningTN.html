@@ -1,683 +1,1439 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>氣象觀測站儀表板 - 康寧 - 臺南市善化區</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        :root {
-            --primary: #4DA6D6;
-            --primary-dark: #1e5a96;
-            --primary-light: #87CEEB;
-            --bg-light: #f0f8ff;
-            --border-light: #B0E0E6;
-            --danger: #dc2626;
-            --warning: #d97706;
-            --success: #059669;
-            --text-sub: #7fa8c4;
-        }
+:root {
+    --primary: #4DA6D6;
+    --primary-dark: #1e5a96;
+    --primary-light: #87CEEB;
+    --bg-light: #f0f8ff;
+    --border-light: #B0E0E6;
+    --text-sub: #7fa8c4;
+}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+html, body {
+    height: 100vh;
+    overflow: hidden;
+}
 
-        .main-layout {
-            display: grid;
-            grid-template-columns: 320px 1fr;
-            gap: 20px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
+    padding: 12px;
+}
 
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            animation: slideInLeft 0.6s ease-out;
-        }
+/* === 主佈局 === */
+.main-layout {
+    height: calc(100vh - 24px);
+    display: grid;
+    grid-template-columns: 1fr 1.05fr;
+    gap: 12px;
+    max-width: 1920px;
+    margin: 0 auto;
+    min-height: 0;
+}
 
-        .coordinate-group2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 10px;
-        }
+.left-col {
+    display: grid;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    gap: 10px;
+    min-height: 0;
+    overflow: hidden;
+}
 
-        .info-item2 {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
+#error-container:empty,
+.heat-index-grid:empty {
+    display: none;
+}
 
-        .info-card {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border-left: 5px solid var(--primary);
-        }
+/* === 站點橫條 === */
+.station-bar {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 14px 20px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    display: grid;
+    grid-template-columns: auto 1.3fr 1.1fr 1.1fr 1.2fr 1.2fr;
+    gap: 18px;
+    align-items: center;
+}
 
-        .info-title {
-            color: var(--primary);
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 15px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+.station-bar-block {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    padding-left: 18px;
+}
 
-        .info-item {
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
+.station-bar-block:first-child {
+    border-left: none;
+    padding-left: 0;
+}
 
-        .info-item:last-child {
-            margin-bottom: 0;
-            padding-bottom: 0;
-            border-bottom: none;
-        }
+.station-bar-label {
+    font-size: 0.7em;
+    opacity: 0.85;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
 
-        .info-label {
-            font-size: 0.8em;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
+.station-bar-value {
+    font-size: 1em;
+    font-weight: bold;
+    line-height: 1.3;
+}
 
-        .info-value {
-            font-size: 1.15em;
-            font-weight: bold;
-            color: var(--primary-dark);
-            word-break: break-word;
-        }
+.station-bar-main { text-align: center; }
+.station-bar-main .station-bar-value { font-size: 1.4em; }
+.station-bar-icon { font-size: 1.6em; }
 
-        .station-header {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            color: white;
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
+/* === 觀測卡片 === */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
 
-        .station-icon {
-            font-size: 3em;
-            margin-bottom: 10px;
-        }
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 6px 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    transition: transform 0.3s ease;
+    border-top: 3px solid var(--primary);
+    text-align: center;
+}
 
-        .station-name {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+}
 
-        .station-id {
-            font-size: 0.9em;
-            opacity: 0.9;
-        }
+.card-title {
+    color: var(--primary);
+    font-size: 0.88em;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 2px;
+    opacity: 0.85;
+}
 
-        .obs-time-box {
-            background: var(--bg-light);
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-            border: 2px solid var(--border-light);
-        }
+.card-value {
+    font-size: 1.9em;
+    font-weight: bold;
+    color: var(--primary-dark);
+    line-height: 1.15;
+}
 
-        .obs-time-label {
-            font-size: 0.75em;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
+.card-unit {
+    font-size: 0.85em;
+    color: var(--text-sub);
+}
 
-        .obs-time-value {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: var(--primary-dark);
-            margin-bottom: 8px;
-        }
+/* === 熱指數 + 詳細 === */
+.heat-index-container,
+.details-container {
+    background: white;
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+}
 
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            animation: slideInRight 0.6s ease-out;
-        }
-
-        .dashboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 16px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            padding: 10px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-            animation: slideUp 0.6s ease-out;
-            border-top: 4px solid var(--primary);
-            text-align: center;
-        }
-
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-        }
-
-        .card-title {
-            color: var(--primary);
-            font-size: 0.75em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            opacity: 0.8;
-        }
-
-        .card-value {
-            font-size: 2em;
-            font-weight: bold;
-            color: var(--primary-dark);
-            margin-bottom: 5px;
-        }
-
-        .card-unit {
-            font-size: 0.8em;
-            color: var(--text-sub);
-        }
-
-        .details-container,
-        .radar-container,
-        .heat-index-container {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            border: 2px solid var(--border-light);
-        }
-
-        .details-container {
-            animation: slideUp 0.8s ease-out;
-        }
-
-        .radar-container {
-            animation: slideUp 0.9s ease-out;
-        }
-
-        .heat-index-container {
-            animation: slideUp 0.85s ease-out;
-        }
-
-        .details-title,
-        .radar-title,
-        .heat-index-title {
-            color: var(--primary);
-            font-size: 1.2em;
-            margin-bottom: 20px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .detail-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-        }
-
-        .detail-item {
-            padding: 15px;
-            background: var(--bg-light);
-            border-radius: 10px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .detail-label {
-            font-size: 0.85em;
-            color: var(--text-sub);
-            margin-bottom: 5px;
-        }
-
-        .detail-value {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: var(--primary-dark);
-        }
-
-        .radar-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--border-light);
-        }
-
-        .radar-info-item {
-            font-size: 0.9em;
-            color: var(--primary-dark);
-        }
-
-        .radar-info-label {
-            font-weight: bold;
-            color: var(--primary);
-        }
-
-        .radar-image-wrapper {
-            width: 100%;
-            height: auto;
-            border-radius: 10px;
-            overflow: hidden;
-            background: var(--bg-light);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 400px;
-        }
-
-        .radar-image {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            border-radius: 10px;
-        }
-
-        .heat-index-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .heat-mini-card {
-            background: var(--bg-light);
-            border-radius: 12px;
-            padding: 16px;
-            border-left: 4px solid var(--primary);
-        }
-
-        .heat-mini-label {
-            font-size: 0.82em;
-            color: var(--text-sub);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .heat-mini-value {
-            font-size: 1.6em;
-            font-weight: bold;
-            color: var(--primary-dark);
-        }
-
-        .heat-main-box {
-            margin-top: 10px;
-            padding: 22px;
-            border-radius: 15px;
-            color: white;
-            background: linear-gradient(135deg, #4DA6D6, #1e5a96);
-            box-shadow: 0 10px 25px rgba(77,166,214,0.25);
-        }
-
-        .heat-main-box.level-1 {
-            background: linear-gradient(135deg, #059669, #047857);
-        }
-
-        .heat-main-box.level-2 {
-            background: linear-gradient(135deg, #e6e600, #cccc00);
-        }
-
-        .heat-main-box.level-3 {
-            background: linear-gradient(135deg, #ea580c, #c2410c);
-        }
-
-        .heat-main-box.level-4 {
-            background: linear-gradient(135deg, #dc2626, #991b1b);
-        }
-
-        .heat-main-title {
-            font-size: 0.95em;
-            opacity: 0.95;
-        }
-
-        .heat-main-value {
-            font-size: 3em;
-            font-weight: 800;
-            margin-top: 8px;
-            line-height: 1.1;
-        }
-
-        .heat-main-meta {
-            margin-top: 10px;
-            font-size: 1em;
-            opacity: 0.97;
-            line-height: 1.6;
-        }
-
-        .heat-note {
-            margin-top: 16px;
-            color: var(--primary-dark);
-            font-size: 0.95em;
-            line-height: 1.8;
-            background: var(--bg-light);
-            border-radius: 10px;
-            padding: 14px 16px;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--primary-dark);
-            font-size: 1.2em;
-        }
-
-        .error {
-            background: #ff6b6b;
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            grid-column: 1 / -1;
-        }
-
-.update-section {
+.heat-index-title,
+.details-title {
+    color: var(--primary);
+    font-size: 0.9em;
+    margin-bottom: 6px;
+    font-weight: bold;
     display: flex;
     align-items: center;
-    padding: 20px;
+    gap: 6px;
+}
+
+.heat-main-box {
+    padding: 18px 20px;
+    border-radius: 12px;
+    color: white;
+    background: linear-gradient(135deg, #4DA6D6, #1e5a96);
+    box-shadow: 0 6px 18px rgba(77,166,214,0.25);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 18px;
+    align-items: center;
+}
+
+.heat-main-box.level-1 { background: linear-gradient(135deg, #059669, #047857); }
+.heat-main-box.level-2 { background: linear-gradient(135deg, #e6b800, #cc9900); }
+.heat-main-box.level-3 { background: linear-gradient(135deg, #ea580c, #c2410c); }
+.heat-main-box.level-4 { background: linear-gradient(135deg, #dc2626, #991b1b); }
+
+.heat-main-left {
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.3);
+    padding-right: 16px;
+}
+
+.heat-main-title { font-size: 0.88em; opacity: 0.95; }
+.heat-main-value { font-size: 2.2em; font-weight: 800; line-height: 1; }
+.heat-main-meta { font-size: 0.95em; opacity: 0.97; line-height: 1.7; }
+
+/* === 詳細觀測 === */
+.detail-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.detail-item {
+    padding: 6px 10px;
+    background: var(--bg-light);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.detail-label {
+    font-size: 0.78em;
+    color: var(--text-sub);
+    margin-bottom: 2px;
+}
+
+.detail-value {
+    font-size: 1em;
+    font-weight: bold;
+    color: var(--primary-dark);
+    line-height: 1.2;
+}
+
+/* === 歷史紀錄 === */
+.history-container {
     background: white;
-    border-radius: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    flex-shrink: 0;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 8px;
 }
 
-.update-section button:first-of-type {
-    margin-left: auto;
+.history-title {
+    color: var(--primary);
+    font-size: 0.9em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-        .update-time {
-            color: var(--primary-dark);
-            font-size: 0.95em;
-        }
+.history-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 0.78em;
+    align-items: center;
+}
 
-        .refresh-btn {
-            background: white;
-            color: var(--primary);
-            border: 2px solid var(--primary);
-            padding: 12px 30px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            font-size: 1em;
-        }
+.history-stat {
+    color: var(--primary-dark);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
 
-        .refresh-btn:hover {
-            transform: scale(1.05);
-            background: var(--primary);
-            color: white;
-        }
+.history-stat-label { color: var(--text-sub); font-size: 0.95em; }
+.history-stat-value { font-weight: bold; font-size: 1.05em; }
+.history-stat.heat .history-stat-value { color: #dc2626; }
 
-        @media (max-width: 1024px) {
-            .main-layout {
-                grid-template-columns: 1fr;
-            }
+.history-clear-btn {
+    background: white;
+    color: #dc2626;
+    border: 1.5px solid #dc2626;
+    padding: 3px 12px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 0.95em;
+    transition: all 0.2s;
+}
 
-            .sidebar {
-                grid-row: 1;
-            }
+.history-clear-btn:hover {
+    background: #dc2626;
+    color: white;
+}
 
-            .dashboard {
-                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            }
-        }
+.history-chart-wrapper {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
 
-        @media (max-width: 640px) {
-            .heat-main-value {
-                font-size: 2.4em;
-            }
+.history-empty {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-sub);
+    font-size: 0.95em;
+    text-align: center;
+    line-height: 1.6;
+    padding: 20px;
+}
 
-            .card-value {
-                font-size: 1.6em;
-            }
-        }
+/* === 底部更新區 === */
+.update-section {
+    background: white;
+    border-radius: 12px;
+    padding: 8px 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
 
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+.update-time {
+    color: var(--primary-dark);
+    font-size: 0.8em;
+    flex: 1;
+}
 
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
+.refresh-btn {
+    background: white;
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    padding: 6px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    font-size: 0.8em;
+    white-space: nowrap;
+}
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-    </style>
+.refresh-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.03);
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--primary-dark);
+    font-size: 1.2em;
+}
+
+/* ============================================ */
+/* === 雷達回波區 === */
+/* ============================================ */
+.radar-container {
+    background: white;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.radar-title {
+    color: var(--primary);
+    font-size: 1em;
+    margin-bottom: 8px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.radar-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.82em;
+}
+
+.radar-info-item { color: var(--primary-dark); }
+.radar-info-label { font-weight: bold; color: var(--primary); }
+
+.radar-image-wrapper {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--bg-light);
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 6px;
+    position: relative;
+    cursor: zoom-in;
+}
+
+.radar-image-wrapper.zoomed { cursor: grab; }
+.radar-image-wrapper.dragging { cursor: grabbing; }
+
+.radar-canvas {
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+    transition: transform 0.15s ease-out;
+    transform-origin: center center;
+}
+
+.radar-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 8px;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.radar-zoom-hint {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(30, 90, 150, 0.85);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 5;
+}
+
+.radar-image-wrapper:hover .radar-zoom-hint { opacity: 1; }
+
+.radar-image-wrapper.zoomed .radar-zoom-hint {
+    opacity: 1;
+    background: rgba(220, 38, 38, 0.85);
+}
+
+/* ============================================ */
+/* === 公司位置標記 === */
+/* ============================================ */
+.company-marker {
+    position: absolute;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.marker-dot {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    margin-top: -7px;
+    border-radius: 50%;
+    background: rgba(30, 90, 150, 0.7);
+    border: 2.5px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 0 8px rgba(30, 90, 150, 0.9), 0 2px 4px rgba(0,0,0,0.4);
+    z-index: 2;
+    transform-origin: center center;
+    transition: transform 0.15s ease-out;
+}
+
+.marker-pulse-ring {
+    position: absolute;
+    margin-left: -7px;
+    margin-top: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: transparent;                      /* 🔄 透明背景 */
+    border: 2px solid rgba(30, 90, 150, 0.8);    /* 🔄 加邊框 */
+    animation: markerPulse 2.7s ease-out infinite;
+    z-index: 1;
+}
+
+/* 🆕 第二、三層光環延遲擴散 */
+.marker-pulse-ring:nth-child(2) {
+    animation-delay: 0.9s;
+}
+
+.marker-pulse-ring:nth-child(3) {
+    animation-delay: 1.8s;
+}
+
+@keyframes markerPulse {
+    0% {
+        width: 14px;
+        height: 14px;
+        margin-left: -7px;
+        margin-top: -7px;
+        opacity: 1;
+    }
+    100% {
+        width: 80px;
+        height: 80px;
+        margin-left: -40px;
+        margin-top: -40px;
+        opacity: 0;
+    }
+}
+
+.marker-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(30, 90, 150, 0.75);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.5);
+    transform-origin: 50% 100%;
+    transition: transform 0.15s ease-out;
+}
+
+.marker-label::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(30, 90, 150, 0.75);
+}
+
+/* ============================================ */
+/* === 平板(寬 ≤ 1024px)=== */
+/* ============================================ */
+@media (max-width: 1024px) {
+    html, body {
+        overflow: auto;
+        height: auto;
+    }
+
+    body { padding: 8px; }
+
+    .main-layout {
+        height: auto;
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .left-col {
+        display: flex;
+        flex-direction: column;
+        overflow: visible;
+    }
+
+    .radar-image-wrapper { min-height: 450px; }
+}
+
+/* ============================================ */
+/* === 手機(寬 ≤ 768px)=== */
+/* ============================================ */
+@media (max-width: 768px) {
+    body { padding: 6px; }
+
+    /* 站點橫條改 2 欄 */
+    .station-bar {
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+
+    .station-bar-block {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid rgba(255,255,255,0.25);
+        padding-top: 8px;
+        grid-column: span 2;
+    }
+
+    .station-bar-block:first-child,
+    .station-bar-main {
+        border-top: none;
+        padding-top: 0;
+        grid-column: span 2;
+    }
+
+    .station-bar-icon {
+        grid-column: 1;
+        font-size: 1.4em;
+    }
+
+    .station-bar-main {
+        grid-column: 2;
+        text-align: left;
+    }
+
+    .station-bar-main .station-bar-value { font-size: 1.2em; }
+
+    /* 9 張卡片改 2 欄 */
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .card { padding: 10px 8px; }
+    .card-value { font-size: 1.6em; }
+
+    /* 熱指數改上下排列 */
+    .heat-main-box {
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 14px;
+        text-align: center;
+    }
+
+    .heat-main-left {
+        border-right: none;
+        border-bottom: 1px solid rgba(255,255,255,0.3);
+        padding-right: 0;
+        padding-bottom: 10px;
+    }
+
+    .heat-main-value { font-size: 2em; }
+    .heat-main-meta { font-size: 0.9em; text-align: center; }
+
+    /* 詳細數據改 2 欄 */
+    .detail-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .detail-item { padding: 8px 10px; }
+    .detail-value { font-size: 0.95em; }
+
+    /* 雷達資訊改 1 欄 */
+    .radar-info {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        font-size: 0.85em;
+    }
+
+    .radar-image-wrapper { min-height: 350px; }
+
+    /* 歷史圖表 */
+    .history-container { min-height: 280px; }
+    .history-chart-wrapper { min-height: 220px; }
+
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .history-stats {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    /* 底部按鈕改直向 */
+    .update-section {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .update-time { text-align: center; }
+
+    .refresh-btn {
+        width: 100%;
+        padding: 10px;
+        font-size: 0.9em;
+    }
+
+    .heat-index-title,
+    .details-title,
+    .history-title,
+    .radar-title { font-size: 1em; }
+
+    /* 標記縮小(手機版)*/
+    .marker-dot {
+        width: 5px;
+        height: 5px;
+        margin-left: -2.5px;
+        margin-top: -2.5px;
+        border-width: 1.5px;
+    }
+
+    .marker-pulse-ring {
+        width: 5px;
+        height: 5px;
+        margin-left: -2.5px;
+        margin-top: -2.5px;
+        animation-name: markerPulseMobile;
+    }
+
+    .marker-label {
+        font-size: 10px;
+        padding: 3px 8px;
+    }
+
+    .marker-label::after {
+        border-left-width: 4px;
+        border-right-width: 4px;
+        border-top-width: 4px;
+        bottom: -4px;
+    }
+}
+
+@keyframes markerPulseMobile {
+    0% {
+        width: 5px;
+        height: 5px;
+        margin-left: -2.5px;
+        margin-top: -2.5px;
+        opacity: 1;
+    }
+    100% {
+        width: 36px;
+        height: 36px;
+        margin-left: -18px;
+        margin-top: -18px;
+        opacity: 0;
+    }
+}
+
+/* ============================================ */
+/* === 小手機(寬 ≤ 480px)=== */
+/* ============================================ */
+@media (max-width: 480px) {
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+    }
+
+    .card-title { font-size: 0.78em; }
+    .card-value { font-size: 1.4em; }
+    .card-unit { font-size: 0.75em; }
+
+    .detail-row { grid-template-columns: 1fr; }
+    .radar-image-wrapper { min-height: 280px; }
+    .station-bar-label { font-size: 0.65em; }
+    .station-bar-value { font-size: 0.9em; }
+    .heat-main-value { font-size: 1.7em; }
+}
+
+/* ============================================ */
+/* === 戶外模式(深色高對比)=== */
+/* ============================================ */
+body.outdoor-mode {
+    background: linear-gradient(135deg, #0f1e2e 0%, #1a3050 100%);
+}
+
+body.outdoor-mode .card,
+body.outdoor-mode .heat-index-container,
+body.outdoor-mode .details-container,
+body.outdoor-mode .history-container,
+body.outdoor-mode .radar-container,
+body.outdoor-mode .update-section {
+    background: #1a2940;
+    border-color: #3b82f6;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+
+body.outdoor-mode .card { border-top-color: #60a5fa; }
+
+body.outdoor-mode .card-title,
+body.outdoor-mode .heat-index-title,
+body.outdoor-mode .details-title,
+body.outdoor-mode .history-title,
+body.outdoor-mode .radar-title,
+body.outdoor-mode .radar-info-label {
+    color: #60a5fa;
+    opacity: 1;
+}
+
+body.outdoor-mode .card-value,
+body.outdoor-mode #heat-temperature,
+body.outdoor-mode #heat-humidity {
+    color: #ffffff;
+    font-weight: 900;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+body.outdoor-mode .detail-value {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+body.outdoor-mode .card-unit,
+body.outdoor-mode .detail-label,
+body.outdoor-mode .update-time,
+body.outdoor-mode .radar-info-item {
+    color: #cbd5e1;
+}
+
+body.outdoor-mode .detail-item {
+    background: #0f172a;
+    border-left-color: #60a5fa;
+}
+
+body.outdoor-mode .station-bar {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+}
+
+body.outdoor-mode .station-bar-label {
+    opacity: 1;
+    color: #bfdbfe;
+}
+
+body.outdoor-mode .radar-image-wrapper { background: #0f172a; }
+body.outdoor-mode .radar-info { border-bottom-color: #3b82f6; }
+
+body.outdoor-mode .refresh-btn {
+    background: #1a2940;
+    color: #60a5fa;
+    border-color: #60a5fa;
+}
+
+body.outdoor-mode .refresh-btn:hover {
+    background: #60a5fa;
+    color: #0f1e2e;
+}
+
+body.outdoor-mode .history-stat-label { color: #cbd5e1; }
+body.outdoor-mode .history-stat-value { color: #ffffff; }
+body.outdoor-mode .history-stat.heat .history-stat-value { color: #f87171; }
+
+body.outdoor-mode .history-clear-btn {
+    background: #1a2940;
+    color: #f87171;
+    border-color: #f87171;
+}
+
+body.outdoor-mode .history-clear-btn:hover {
+    background: #f87171;
+    color: #1a2940;
+}
+
+body.outdoor-mode .history-empty { color: #cbd5e1; }
+
+body.outdoor-mode .heat-main-box {
+    box-shadow: 0 0 30px rgba(255, 165, 0, 0.4), 0 6px 18px rgba(0,0,0,0.5);
+}
+
+body.outdoor-mode .loading { color: #60a5fa; }
+
+body.outdoor-mode .radar-zoom-hint {
+    background: rgba(96, 165, 250, 0.9);
+    color: #0f1e2e;
+}
+
+
+/* ============================================ */
+/* === 🌦️ 天氣動態背景(限定在 dashboard 內)=== */
+/* ============================================ */
+
+/* dashboard 啟用時:加背景 + 限制動畫範圍 */
+.dashboard {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    transition: background 1.5s ease, padding 0.3s ease;
+}
+
+.dashboard.weather-bg-active {
+    padding: 10px;
+    background: linear-gradient(135deg, #87CEEB 0%, #E0F6FF 100%);
+}
+
+.dashboard.weather-bg-active.weather-sunny {
+    background: linear-gradient(135deg, #FFB347 0%, #87CEEB 60%, #E0F6FF 100%);
+}
+
+.dashboard.weather-bg-active.weather-cloudy {
+    background: linear-gradient(135deg, #8da9c4 0%, #c5d3df 100%);
+}
+
+.dashboard.weather-bg-active.weather-overcast {
+    background: linear-gradient(135deg, #5e6f80 0%, #8a99a8 100%);
+}
+
+.dashboard.weather-bg-active.weather-rain {
+    background: linear-gradient(135deg, #5b6c7d 0%, #8a9eb1 100%);
+}
+
+.dashboard.weather-bg-active.weather-thunder {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+}
+
+.dashboard.weather-bg-active.weather-fog {
+    background: linear-gradient(135deg, #b8c5d1 0%, #d6dde4 100%);
+}
+
+/* 動畫容器 */
+.weather-effects {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+/* 卡片在動畫之上,半透明讓背景透出來 */
+.dashboard.weather-bg-active .card {
+    position: relative;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.9);
+}
+
+/* 戶外模式適配 */
+body.outdoor-mode .dashboard.weather-bg-active .card {
+    background: rgba(26, 41, 64, 0.92);
+}
+
+/* === 太陽(晴天)=== */
+.big-sun {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #fff5cc 0%, #ffd700 50%, transparent 70%);
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+    animation: sunPulse 4s ease-in-out infinite;
+}
+
+@keyframes sunPulse {
+    0%, 100% { box-shadow: 0 0 25px rgba(255, 215, 0, 0.6); }
+    50%      { box-shadow: 0 0 45px rgba(255, 215, 0, 0.9); }
+}
+
+.sun-particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: rgba(255, 215, 0, 0.7);
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(255, 215, 0, 0.8);
+    animation: sunFloat linear infinite;
+}
+
+@keyframes sunFloat {
+    0%   { top: 100%; opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: -10px; opacity: 0; }
+}
+
+/* === 雲(多雲、陰)=== */
+.cloud {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 100px;
+    animation: cloudMove linear infinite;
+}
+
+.cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+}
+
+.cloud::before {
+    width: 60%;
+    height: 100%;
+    top: -50%;
+    left: 20%;
+}
+
+.cloud::after {
+    width: 40%;
+    height: 80%;
+    top: -30%;
+    right: 15%;
+}
+
+@keyframes cloudMove {
+    0%   { left: -150px; }
+    100% { left: 100%; }
+}
+
+/* === 雨滴 === */
+.raindrop {
+    position: absolute;
+    top: -40px;
+    width: 1.5px;
+    height: 25px;
+    background: linear-gradient(to bottom, transparent, rgba(174, 194, 224, 0.8));
+    animation: rainFall linear infinite;
+}
+
+@keyframes rainFall {
+    0%   { top: -40px; }
+    100% { top: 100%; }
+}
+
+/* === 閃電 === */
+.lightning-flash {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0);
+    pointer-events: none;
+    animation: lightning 8s infinite;
+}
+
+@keyframes lightning {
+    0%, 95%, 100% { background: rgba(255, 255, 255, 0); }
+    96%, 98%       { background: rgba(255, 255, 255, 0.5); }
+    97%, 99%       { background: rgba(255, 255, 255, 0); }
+}
+
+/* === 霧 === */
+.fog {
+    position: absolute;
+    width: 200%;
+    height: 60px;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.5) 0%, transparent 70%);
+    animation: fogMove linear infinite;
+}
+
+@keyframes fogMove {
+    0%   { transform: translateX(-50%); }
+    100% { transform: translateX(0%); }
+}
+
+
+ </style>
 </head>
+
+
+
+
+
 <body>
-    <div id="loading" class="loading">
-        加載中... 請稍候 ⏳
-    </div>
+    <div id="loading" class="loading">加載中... 請稍候 ⏳</div>
 
     <div id="content" style="display: none;">
-        <div class="main-layout">
-            <div class="sidebar">
-                <div class="station-header">
-                    <div class="station-icon">📡</div>
-                    <div class="station-name" id="station-name">--</div>
-                    <div class="station-id" id="station-id">--</div>
-                </div>
+    <div class="main-layout">
 
-                <div class="info-card">
-                    <div class="info-title">⏰ 最後更新時間</div>
-                    <div class="obs-time-box">
-                        <div class="obs-time-label">天氣觀測</div>
-                        <div class="obs-time-value" id="obs-time-display">--</div>
-                        <div class="obs-time-label">雷達回波</div>
-                        <div class="obs-time-value" id="radarTime">--</div>
-                    </div>
-                </div>
+        <!-- ============ 左欄(合併後) ============ -->
+        <div class="left-col">
 
-                <div class="info-card">
-                    <div class="info-title">📍 天氣觀測位置資訊</div>
-                    <div class="coordinate-group2">
-                        <div class="info-item2">
-                            <div class="info-label">縣市</div>
-                            <div class="info-value" id="county-name">--</div>
-                        </div>
-                        <div class="info-item2">
-                            <div class="info-label">鄉鎮</div>
-                            <div class="info-value" id="town-name">--</div>
-                        </div>
-                    </div>
-                </div>
+<!-- 頂部資訊橫條 -->
+<div class="station-bar">
+    <div class="station-bar-icon">📡</div>
 
-                <div class="info-card">
-                    <div class="info-title">🧭 天氣觀測座標資訊</div>
-                    <div class="coordinate-group2">
-                        <div class="info-item2">
-                            <div class="info-label">北緯</div>
-                            <div class="info-value" id="latitude" style="font-size: 0.95em;">--</div>
-                        </div>
-                        <div class="info-item2">
-                            <div class="info-label">東經</div>
-                            <div class="info-value" id="longitude" style="font-size: 0.95em;">--</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="info-card">
-                    <div class="info-title">🏷️ 天氣觀測站點代碼</div>
-                    <div class="info-item">
-                        <div class="info-label">ID</div>
-                        <div class="info-value" id="station-code">--</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="main-content">
-                <div id="error-container"></div>
-
-                <div class="dashboard">
-                    <div class="card">
-                        <div class="card-title">🌤️ 天氣狀況</div>
-                        <div class="card-value" id="weather-desc">--</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">🌡️ 溫度</div>
-                        <div class="card-value"><span id="heat-temperature">--</span></div>
-                        <div class="card-unit">°C</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">💧 濕度</div>
-                        <div class="card-value"><span id="heat-humidity">--</span></div>
-                        <div class="card-unit">%</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">💨 風速</div>
-                        <div class="card-value"><span id="wind">--</span></div>
-                        <div class="card-unit">m/s</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">💨 最大陣風</div>
-                        <div class="card-value"><span id="max-wind-card">--</span></div>
-                        <div class="card-unit">m/s</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">🧭 風向</div>
-                        <div class="card-value" id="wind-dir">--</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">⬆️ 氣壓</div>
-                        <div class="card-value"><span id="pressure">--</span></div>
-                        <div class="card-unit">hPa</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">👁️ 能見度</div>
-                        <div class="card-value" id="visibility">--</div>
-                        <div class="card-unit">KM</div>
-                    </div>
-                    <div class="card">
-                        <div class="card-title">🌧️ 降雨</div>
-                        <div class="card-value"><span id="precipitation">--</span></div>
-                        <div class="card-unit">mm</div>
-                    </div>
-                </div>
-
-                <div class="heat-index-container">
-                    <div class="heat-index-title">🔥 熱指數評估</div>
-
-                    <div class="heat-index-grid">
-                                          
-                    </div>
-
-                    <div class="heat-main-box" id="heat-box">
-                        <div class="heat-main-title">目前熱指數</div>
-                        <div class="heat-main-value" id="heat-index-value">--</div>
-                        <div class="heat-main-meta" id="heat-risk-level">風險等級：--</div>
-                        <div class="heat-main-meta" id="heat-mapping-info">表格對應：--</div>
-                    </div>
-
-                    <div class="heat-note">
-                        依中央氣象署即時測站資料與熱指數表換算。若溫度或相對濕度未剛好命中表格，依附表規則採用「較高數值」評估。
-                    </div>
-                </div>
-
-                <div class="radar-container">
-                    <div class="radar-title">🛰️ 林園雷達回波圖</div>
-                    <div class="radar-info">
-                        <div class="radar-info-item">
-                            <span class="radar-info-label">📍 位置：</span>
-                            <span>東經 <span id="radar-lon">120.38°</span>，北緯 <span id="radar-lat">22.53°</span></span>
-                        </div>
-                        <div class="radar-info-item">
-                            <span class="radar-info-label">📏 範圍：</span>
-                            <span id="radar-range">距雷達 150 公里</span>
-                        </div>
-                        <div class="radar-info-item">
-                            <span class="radar-info-label">⏱️ 更新：</span>
-                            <span id="">--</span>
-                        </div>
-                    </div>
-                    <div class="radar-image-wrapper">
-                        <img id="radar-image" class="radar-image" src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png" alt="林園雷達回波圖" onerror="handleRadarImageError()">
-                    </div>
-                </div>
-
-<div class="details-container">
-    <div class="details-title">📊 詳細觀測數據</div>
-    <div class="detail-row">
-        <div class="detail-item">
-            <div class="detail-label">最高溫</div>
-            <div class="detail-value"><span id="max-temp">--</span>°C</div>
+    <div class="station-bar-block station-bar-main">
+        <div class="station-bar-value" id="station-name">--</div>
+        <div class="station-bar-label">
+            <span id="station-id">--</span>
+            <span id="station-code" style="display:none;"></span>
         </div>
-        <div class="detail-item">
-            <div class="detail-label">最高溫發生時間</div>
-            <div class="detail-value" id="max-temp-time">--</div>
+    </div>
+
+    <div class="station-bar-block">
+        <div class="station-bar-label">📍 觀測位置</div>
+        <div class="station-bar-value">
+            <span id="county-name">--</span> <span id="town-name">--</span>
         </div>
-        <div class="detail-item">
-            <div class="detail-label">最低溫</div>
-            <div class="detail-value"><span id="min-temp">--</span>°C</div>
+    </div>
+
+    <div class="station-bar-block">
+        <div class="station-bar-label">🧭 座標</div>
+        <div class="station-bar-value" style="font-size: 0.9em;">
+            N <span id="latitude">--</span><br>
+            E <span id="longitude">--</span>
         </div>
-        <div class="detail-item">
-            <div class="detail-label">最低溫發生時間</div>
-            <div class="detail-value" id="min-temp-time">--</div>
-        </div>
+    </div>
+
+    <!-- 時間改成上下兩個 block -->
+    <div class="station-bar-block">
+        <div class="station-bar-label">⏰ 觀測時間</div>
+        <div class="station-bar-value" id="obs-time-display" style="font-size: 0.95em;">--</div>
+    </div>
+
+    <div class="station-bar-block">
+        <div class="station-bar-label">🛰️ 雷達時間</div>
+        <div class="station-bar-value" id="radarTime" style="font-size: 0.95em;">--</div>
     </div>
 </div>
 
-                <div class="update-section">
-                    <div class="update-time">
-                        📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
+            <div id="error-container"></div>
+
+            <!-- 熱指數 -->
+            <div class="heat-index-container">
+                <div class="heat-index-title">🔥 熱指數評估</div>
+                <div class="heat-index-grid"></div>
+                <div class="heat-main-box" id="heat-box">
+                    <div class="heat-main-left">
+                        <div class="heat-main-title">目前熱指數</div>
+                        <div class="heat-main-value" id="heat-index-value">--</div>
                     </div>
-                    <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
-                    <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
+                    <div>
+                        <div class="heat-main-meta" id="heat-risk-level">風險等級:--</div>
+                        <div class="heat-main-meta" id="heat-mapping-info">表格對應:--</div>
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <!-- 9 個觀測卡片 -->
+            <div class="dashboard">
+
+    <div class="weather-effects" id="weather-effects"></div>
+
+
+                <div class="card">
+                    <div class="card-title">🌤️ 天氣狀況</div>
+                    <div class="card-value" id="weather-desc" style="font-size: 1.2em;">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🌡️ 溫度</div>
+                    <div class="card-value"><span id="heat-temperature">--</span></div>
+                    <div class="card-unit">°C</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">💧 濕度</div>
+                    <div class="card-value"><span id="heat-humidity">--</span></div>
+                    <div class="card-unit">%</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">💨 風速</div>
+                    <div class="card-value"><span id="wind">--</span></div>
+                    <div class="card-unit">m/s</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">💨 最大陣風</div>
+                    <div class="card-value"><span id="max-wind-card">--</span></div>
+                    <div class="card-unit">m/s</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🧭 風向</div>
+                    <div class="card-value" id="wind-dir" style="font-size: 1.2em;">--</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">⬆️ 氣壓</div>
+                    <div class="card-value"><span id="pressure">--</span></div>
+                    <div class="card-unit">hPa</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">👁️ 能見度</div>
+                    <div class="card-value" id="visibility" style="font-size: 1.2em;">--</div>
+                    <div class="card-unit">KM</div>
+                </div>
+                <div class="card">
+                    <div class="card-title">🌧️ 降雨</div>
+                    <div class="card-value"><span id="precipitation">--</span></div>
+                    <div class="card-unit">mm</div>
+                </div>
+            </div>
+
+<!-- 📈 內嵌歷史趨勢圖 -->
+<div class="history-container">
+   <div class="history-header">
+    <div class="history-title">📈 過去 24 小時溫度與熱指數趨勢 <span id="hist-station" style="opacity:0.7; font-weight:normal;"></span>
+</div>
+    <div class="history-stats">
+        <span class="history-stat heat">
+            <span class="history-stat-label">最高熱指數:</span>
+            <span class="history-stat-value" id="hist-max-heat">--</span>
+        </span>
+        <button class="history-clear-btn" onclick="clearHistory()">🗑️ 清除</button>
     </div>
+</div>
+    <div class="history-chart-wrapper">
+        <canvas id="history-chart"></canvas>
+    </div>
+</div>
+
+
+            <!-- 詳細數據(4 欄橫向) -->
+            <div class="details-container">
+                <div class="details-title">📊 詳細觀測數據</div>
+                <div class="detail-row">
+                    <div class="detail-item">
+                        <div class="detail-label">最高溫</div>
+                        <div class="detail-value"><span id="max-temp">--</span> °C</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">最高溫發生時間</div>
+                        <div class="detail-value" id="max-temp-time">--</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">最低溫</div>
+                        <div class="detail-value"><span id="min-temp">--</span> °C</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">最低溫發生時間</div>
+                        <div class="detail-value" id="min-temp-time">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部更新區 -->
+<div class="update-section">
+    <div class="update-time">
+        📍 頁面最後更新於: <span id="sidebar-radar-update-time">--</span>
+    </div>
+    <button class="refresh-btn" onclick="toggleWeatherEffects()" id="weather-bg-btn">🌧️ 動態背景</button>
+    <button class="refresh-btn" onclick="toggleOutdoorMode()" id="outdoor-btn">🌞 戶外模式</button>
+    <button class="refresh-btn" onclick="fetchWeatherData()">🔄 重新整理</button>
+    <button class="refresh-btn" onclick="location.href='index.html'">🏠 回首頁</button>
+</div>
+        </div>
+
+        <!-- ============ 右欄:雷達 ============ -->
+        <div class="radar-container">
+            <div class="radar-title">🛰️ 林園雷達回波圖</div>
+            <div class="radar-info">
+                <div class="radar-info-item">
+                    <span class="radar-info-label">📍 位置:</span>
+                    東經 <span id="radar-lon">120.38°</span>,北緯 <span id="radar-lat">22.53°</span>
+                </div>
+                <div class="radar-info-item">
+                    <span class="radar-info-label">📏 範圍:</span>
+                    <span id="radar-range">距雷達 150 km</span>
+                </div>
+                <div class="radar-info-item">
+                    <span class="radar-info-label">⏱️ 更新:</span>
+                    <span>--</span>
+                </div>
+            </div>
+
+<div class="radar-image-wrapper" id="radar-wrapper">
+    <div class="radar-zoom-hint" id="radar-zoom-hint">🔍 滾輪縮放 · 拖曳移動 · 雙擊還原</div>
+    
+    <!-- 🆕 新增 canvas 容器 -->
+    <div class="radar-canvas" id="radar-canvas">
+        <img id="radar-image" class="radar-image"
+             src="https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png"
+             alt="林園雷達回波圖" onerror="handleRadarImageError()">
+        
+        <!-- 🆕 公司標記 -->
+<div class="company-marker" id="company-marker">
+    <div class="marker-pulse-ring"></div>
+    <div class="marker-pulse-ring"></div>   <!-- 🆕 第二層 -->
+    <div class="marker-pulse-ring"></div>   <!-- 🆕 第三層 -->
+    <div class="marker-dot"></div>
+    <div class="marker-label">📍 台南廠</div>
+</div>
+    </div>
+</div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+// === 歷史資料儲存與圖表(內嵌版,多站獨立)===
+const HOURS_24_MS = 24 * 60 * 60 * 1000;
+let historyChart = null;
+
+// 🆕 動態取得 key:不同站點不會互相覆蓋
+function getHistoryKey() {
+    const stationCode = document.getElementById('station-code')?.textContent?.trim();
+    if (stationCode && stationCode !== '--' && stationCode !== '') {
+        return `weather_history_${stationCode}`;
+    }
+    const filename = window.location.pathname.split('/').pop().replace('.html', '').replace(/\s+/g, '_');
+    return `weather_history_${filename || 'default'}`;
+}
+
+function saveToHistory(temperature, heatIndex) {
+    const temp = parseFloat(temperature);
+    const heat = parseFloat(heatIndex);
+    if (isNaN(temp) && isNaN(heat)) return;
+
+    const key = getHistoryKey();
+    const now = Date.now();
+    let data = [];
+    try {
+        data = JSON.parse(localStorage.getItem(key) || '[]');
+    } catch (e) { data = []; }
+
+    if (data.length > 0 && now - data[data.length - 1].time < 5 * 60 * 1000) {
+        data[data.length - 1] = { time: now, temp: temp, heat: heat };
+    } else {
+        data.push({ time: now, temp: temp, heat: heat });
+    }
+
+    const cutoff = now - HOURS_24_MS;
+    data = data.filter(d => d.time >= cutoff);
+
+    localStorage.setItem(key, JSON.stringify(data));
+    renderHistoryChart();
+}
+
+function clearHistory() {
+    if (confirm('確定要清除此站點的所有歷史記錄嗎?')) {
+        localStorage.removeItem(getHistoryKey());
+        renderHistoryChart();
+    }
+}
+
+function renderHistoryChart() {
+    // 🆕 加在這裡(最開頭)
+    const stationName = document.getElementById('station-name')?.textContent?.trim() || '';
+    const histStation = document.getElementById('hist-station');
+    if (histStation) histStation.textContent = stationName ? `(${stationName})` : '';
+
+    let data = [];
+    try {
+        data = JSON.parse(localStorage.getItem(getHistoryKey()) || '[]');
+    } catch (e) { data = []; }
+
+    const wrapper = document.querySelector('.history-chart-wrapper');
+    const setStat = (id, val) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = val;
+    };
+
+    if (data.length === 0) {
+        wrapper.innerHTML = '<div class="history-empty">📭 此站點尚無歷史資料 — 每次刷新後會自動記錄,稍後即可看到趨勢曲線</div>';
+        setStat('hist-max-heat', '--');
+        return;
+    }
+
+    if (!document.getElementById('history-chart')) {
+        wrapper.innerHTML = '<canvas id="history-chart"></canvas>';
+    }
+
+    data.sort((a, b) => a.time - b.time);
+
+    const labels = data.map(d => {
+        const date = new Date(d.time);
+        return date.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false });
+    });
+    const tempData = data.map(d => isNaN(d.temp) ? null : d.temp);
+    const heatData = data.map(d => isNaN(d.heat) ? null : d.heat);
+
+    const validHeats = heatData.filter(t => t !== null);
+    setStat('hist-max-heat', validHeats.length ? Math.max(...validHeats).toFixed(1) + ' °C' : '--');
+
+    if (historyChart) historyChart.destroy();
+
+    const ctx = document.getElementById('history-chart').getContext('2d');
+    historyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '🌡️ 溫度',
+                    data: tempData,
+                    borderColor: '#4DA6D6',
+                    backgroundColor: 'rgba(77, 166, 214, 0.15)',
+                    tension: 0.3, fill: true,
+                    pointRadius: 2, pointHoverRadius: 5, borderWidth: 2
+                },
+                {
+                    label: '🔥 熱指數',
+                    data: heatData,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                    tension: 0.3, fill: true,
+                    pointRadius: 2, pointHoverRadius: 5, borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: {
+                    position: 'top', align: 'end',
+                    labels: { font: { size: 11, weight: 'bold' }, boxWidth: 14, padding: 8 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(30, 90, 150, 0.95)',
+                    padding: 10,
+                    titleFont: { size: 12 }, bodyFont: { size: 12 }
+                }
+            },
+            scales: {
+                y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 } } },
+                x: { grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 10 } }
+            }
+        }
+    });
+}
+
+window.addEventListener('load', () => {
+    setTimeout(renderHistoryChart, 500);
+});
+
+
+</script>
+</body>
+</html>
 
     <script>
+
+// === 公司位置設定 ===
+const COMPANY_LAT = 23.11812836873932;   // 台南廠緯度
+const COMPANY_LNG = 120.27846003872382;  // 台南廠經度
+const RADAR_CENTER_LAT = 22.53;          // 林園雷達緯度
+const RADAR_CENTER_LNG = 120.38;         // 林園雷達經度
+const RADAR_RANGE_KM = 150;              // 雷達範圍 km
+
+// 計算公司在雷達圖上的位置(%)
+function setCompanyMarkerPosition() {
+    const dy = (COMPANY_LAT - RADAR_CENTER_LAT) * 111;  // 南北 km
+    const dx = (COMPANY_LNG - RADAR_CENTER_LNG) * 111 *
+               Math.cos(RADAR_CENTER_LAT * Math.PI / 180);  // 東西 km
+
+    const xPercent = 50 + (dx / RADAR_RANGE_KM) * 50;
+    const yPercent = 50 - (dy / RADAR_RANGE_KM) * 50;  // y 軸反向
+
+    const marker = document.getElementById('company-marker');
+    if (marker) {
+        marker.style.left = xPercent + '%';
+        marker.style.top = yPercent + '%';
+    }
+}
+
+// 頁面載入時設定位置
+window.addEventListener('load', setCompanyMarkerPosition);
+
+
         const API_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore/O-A0003-001?Authorization=CWA-C0C45A07-4914-4BBF-9A47-DD70E5655BE2&StationId=CAN090&StationName=%E5%9C%8B%E4%B8%89S342K';
         const RADAR_IMAGE_URL = 'https://cwaopendata.s3.ap-northeast-1.amazonaws.com/Observation/O-A0084-003.png';
 async function loadRadarInfo() {
@@ -746,14 +1502,19 @@ async function loadRadarInfo() {
             return '🌤️';
         }
 
-        function getNestedValue(obj, path, defaultValue = '--') {
-            try {
-                const value = path.split('.').reduce((current, prop) => current?.[prop], obj);
-                return value !== undefined && value !== null && value !== '-99' ? value : defaultValue;
-            } catch (e) {
-                return defaultValue;
-            }
-        }
+function getNestedValue(obj, path, defaultValue = '--') {
+    try {
+        const value = path.split('.').reduce((current, prop) => current?.[prop], obj);
+        // 過濾無效值:null/undefined/-99(字串或數字)/NaN
+        if (value === undefined || value === null) return defaultValue;
+        if (value === '-99' || value === -99) return defaultValue;
+        const num = parseFloat(value);
+        if (!isNaN(num) && num <= -90) return defaultValue;  // 任何 -90 以下都視為無效
+        return value;
+    } catch (e) {
+        return defaultValue;
+    }
+}
 
         function formatDateTime(dateTimeString) {
             if (!dateTimeString || dateTimeString === '--') return '--';
@@ -794,37 +1555,48 @@ async function loadRadarInfo() {
             return levels[levels.length - 1];
         }
 
-        function getHeatIndex(temp, humidity) {
-            const mappedTemp = getCeilValue(TEMP_LEVELS, temp);
-            const mappedHumidity = getCeilValue(HUMIDITY_LEVELS, humidity);
-            const humidityIndex = HUMIDITY_LEVELS.indexOf(mappedHumidity);
-            const row = HEAT_INDEX_TABLE[mappedTemp];
+function getHeatIndex(temp, humidity) {
+    // 🆕 溫度低於 26.7°C 或濕度低於 40% → 未達風險標準
+    if (temp < 26.7 || humidity < 40) {
+        return {
+            heatIndex: null,        // 表示未達標
+            mappedTemp: null,
+            mappedHumidity: null,
+            belowThreshold: true     // 🆕 標示
+        };
+    }
 
-            if (!row) {
-                throw new Error("找不到對應的溫度表格資料");
+    const mappedTemp = getCeilValue(TEMP_LEVELS, temp);
+    const mappedHumidity = getCeilValue(HUMIDITY_LEVELS, humidity);
+    const humidityIndex = HUMIDITY_LEVELS.indexOf(mappedHumidity);
+    const row = HEAT_INDEX_TABLE[mappedTemp];
+
+    if (!row) {
+        throw new Error("找不到對應的溫度表格資料");
+    }
+
+    let heatIndex = row[humidityIndex];
+
+    if (heatIndex == null) {
+        for (let i = humidityIndex; i >= 0; i--) {
+            if (row[i] != null) {
+                heatIndex = row[i];
+                break;
             }
-
-            let heatIndex = row[humidityIndex];
-
-            if (heatIndex == null) {
-                for (let i = humidityIndex; i >= 0; i--) {
-                    if (row[i] != null) {
-                        heatIndex = row[i];
-                        break;
-                    }
-                }
-            }
-
-            if (heatIndex == null) {
-                throw new Error("熱指數表格中找不到可用值");
-            }
-
-            return {
-                heatIndex,
-                mappedTemp,
-                mappedHumidity
-            };
         }
+    }
+
+    if (heatIndex == null) {
+        throw new Error("熱指數表格中找不到可用值");
+    }
+
+    return {
+        heatIndex,
+        mappedTemp,
+        mappedHumidity,
+        belowThreshold: false
+    };
+}
 
         function getElementValue(weatherElement, name) {
             if (!weatherElement) return null;
@@ -871,60 +1643,78 @@ async function loadRadarInfo() {
         }
 
         function updateHeatIndexDisplay(station) {
-            const stationName =
-                station?.StationName ||
-                station?.GeoInfo?.StationName ||
-                `${station?.GeoInfo?.CountyName || ''}${station?.GeoInfo?.TownName || ''}` ||
-                "未知測站";
+    const stationName =
+        station?.StationName ||
+        station?.GeoInfo?.StationName ||
+        `${station?.GeoInfo?.CountyName || ''}${station?.GeoInfo?.TownName || ''}` ||
+        "未知測站";
 
-            const obsTime = station?.ObsTime?.DateTime || station?.ObsTime || "未知時間";
-            const weatherElement = station?.WeatherElement;
+    const obsTime = station?.ObsTime?.DateTime || station?.ObsTime || "未知時間";
+    const weatherElement = station?.WeatherElement;
 
-            const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
-            const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
+    const tempRaw = normalizeValue(getElementValue(weatherElement, "AirTemperature"));
+    const humidityRaw = normalizeValue(getElementValue(weatherElement, "RelativeHumidity"));
 
-            //document.getElementById("heat-station-name").textContent = stationName;
-            //document.getElementById("heat-obs-time").textContent = String(obsTime).replace("T", " ");
+    // === 找不到欄位 ===
+    if (tempRaw == null || humidityRaw == null) {
+        document.getElementById("heat-temperature").textContent = "--";
+        document.getElementById("heat-humidity").textContent = "--";
+        document.getElementById("heat-index-value").textContent = "--";
+        document.getElementById("heat-risk-level").textContent = "風險等級:--";
+        document.getElementById("heat-mapping-info").textContent = "表格對應:找不到 AirTemperature 或 RelativeHumidity 欄位";
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
 
-            if (tempRaw == null || humidityRaw == null) {
-                document.getElementById("heat-temperature").textContent = "--";
-                document.getElementById("heat-humidity").textContent = "--";
-                document.getElementById("heat-index-value").textContent = "--";
-                document.getElementById("heat-risk-level").textContent = "風險等級：--";
-                document.getElementById("heat-mapping-info").textContent = "表格對應：找不到 AirTemperature 或 RelativeHumidity 欄位";
-                document.getElementById("heat-box").className = "heat-main-box";
-                return;
-            }
+    const temp = Number(tempRaw);
+    const humidity = Number(humidityRaw);
 
-            const temp = Number(tempRaw);
-            const humidity = Number(humidityRaw);
+    // === 儀器調校中(-99)===
+    if (Number.isNaN(temp) || Number.isNaN(humidity) || temp <= -90 || humidity <= -90) {
+        document.getElementById("heat-temperature").textContent = "儀器調校中";
+        document.getElementById("heat-humidity").textContent = "儀器調校中";
+        document.getElementById("heat-index-value").textContent = "--";
+        document.getElementById("heat-risk-level").textContent = "風險等級:儀器調校中";
+        document.getElementById("heat-mapping-info").textContent = "表格對應:儀器調校中,暫無資料";
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
 
-            if (Number.isNaN(temp) || Number.isNaN(humidity)) {
-                document.getElementById("heat-temperature").textContent = "--";
-                document.getElementById("heat-humidity").textContent = "--";
-                document.getElementById("heat-index-value").textContent = "--";
-                document.getElementById("heat-risk-level").textContent = "風險等級：--";
-                document.getElementById("heat-mapping-info").textContent = `表格對應：數值格式異常 temp=${tempRaw}, humidity=${humidityRaw}`;
-                document.getElementById("heat-box").className = "heat-main-box";
-                return;
-            }
+    const result = getHeatIndex(temp, humidity);
 
-            const result = getHeatIndex(temp, humidity);
-            const risk = getRiskLevel(result.heatIndex);
+    // === 🆕 未達熱指數表起始門檻 ===
+    if (result.belowThreshold) {
+        document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
+        document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
+        document.getElementById("heat-index-value").textContent = "未達風險";
+        document.getElementById("heat-risk-level").textContent = "風險等級:未達風險標準";
 
-            document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
-            document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
-            document.getElementById("heat-index-value").textContent = `${result.heatIndex.toFixed(1)} °C`;
-            document.getElementById("heat-risk-level").textContent = `風險等級：${risk.text}`;
-            document.getElementById("heat-mapping-info").textContent =
-                `表格對應：溫度 ${temp.toFixed(1)} → ${result.mappedTemp.toFixed(1)} °C；濕度 ${humidity.toFixed(0)} → ${result.mappedHumidity} %`;
+        let reason = "";
+        if (temp < 26.7 && humidity < 40) reason = "溫度與濕度皆低於熱指數表起始值";
+        else if (temp < 26.7) reason = "溫度低於 26.7°C(熱指數表起始溫度)";
+        else if (humidity < 40) reason = "濕度低於 40%(熱指數表起始濕度)";
 
-            const heatBox = document.getElementById("heat-box");
-            heatBox.className = "heat-main-box";
-            if (risk.level > 0) {
-                heatBox.classList.add(`level-${risk.level}`);
-            }
-        }
+        document.getElementById("heat-mapping-info").textContent = `說明:${reason}`;
+        document.getElementById("heat-box").className = "heat-main-box";
+        return;
+    }
+
+    // === 正常計算 ===
+    const risk = getRiskLevel(result.heatIndex);
+
+    document.getElementById("heat-temperature").textContent = `${temp.toFixed(1)} °C`;
+    document.getElementById("heat-humidity").textContent = `${humidity.toFixed(0)} %`;
+    document.getElementById("heat-index-value").textContent = `${result.heatIndex.toFixed(1)} °C`;
+    document.getElementById("heat-risk-level").textContent = `風險等級:${risk.text}`;
+    document.getElementById("heat-mapping-info").textContent =
+        `表格對應:溫度 ${temp.toFixed(1)} → ${result.mappedTemp.toFixed(1)} °C;濕度 ${humidity.toFixed(0)} → ${result.mappedHumidity} %`;
+
+    const heatBox = document.getElementById("heat-box");
+    heatBox.className = "heat-main-box";
+    if (risk.level > 0) {
+        heatBox.classList.add(`level-${risk.level}`);
+    }
+}
 
         async function fetchWeatherData() {
             const loadingDiv = document.getElementById('loading');
@@ -958,6 +1748,24 @@ async function loadRadarInfo() {
 
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
+                
+// 🆕 只在資料正常時才存歷史(避免儀器調校中的無效值汙染圖表)
+const currentTemp = document.getElementById('heat-temperature').textContent;
+let currentHeat = document.getElementById('heat-index-value').textContent;
+
+// 「未達風險」時,熱指數 = 溫度(讓圖表連續)
+if (currentHeat === '未達風險' && currentTemp !== '儀器調校中' && currentTemp !== '--') {
+    currentHeat = currentTemp;
+}
+
+if (currentTemp !== '儀器調校中' && currentTemp !== '--' && currentHeat !== '--') {
+    saveToHistory(currentTemp, currentHeat);
+
+// 🆕 天氣資料更新時,自動套用對應動畫
+const weatherText = document.getElementById('weather-desc')?.textContent || '';
+applyWeatherEffect(weatherText);
+
+}
 
             } catch (error) {
                 console.error('錯誤:', error);
@@ -971,6 +1779,8 @@ async function loadRadarInfo() {
                 loadingDiv.style.display = 'none';
                 contentDiv.style.display = 'block';
             }
+            // 取得目前畫面上的值來儲存
+
         }
 
         function updateDisplay(station) {
@@ -1112,6 +1922,316 @@ setInterval(() => {
     document.getElementById('radarTime').textContent = '讀取失敗';
   });
 }, 60 * 1000);
+
+
+// === 🌞 戶外模式切換 ===
+function toggleOutdoorMode() {
+    const isOutdoor = document.body.classList.toggle('outdoor-mode');
+    localStorage.setItem('outdoor-mode', isOutdoor);
+    
+    const btn = document.getElementById('outdoor-btn');
+    if (btn) btn.textContent = isOutdoor ? '☀️ 室內模式' : '🌞 戶外模式';
+    
+    // 切換後重新繪製圖表(因為背景色變了)
+    if (typeof renderHistoryChart === 'function') {
+        setTimeout(renderHistoryChart, 100);
+    }
+}
+
+// 頁面載入時還原使用者上次設定
+(function restoreOutdoorMode() {
+    if (localStorage.getItem('outdoor-mode') === 'true') {
+        document.body.classList.add('outdoor-mode');
+        // 等按鈕載入後再改文字
+        window.addEventListener('load', () => {
+            const btn = document.getElementById('outdoor-btn');
+            if (btn) btn.textContent = '☀️ 室內模式';
+        });
+    }
+})();
+
+
+// === 🔍 雷達圖縮放功能 ===
+(function setupRadarZoom() {
+    const wrapper = document.getElementById('radar-wrapper');
+    const canvas = document.getElementById('radar-canvas');   // 🆕 改抓 canvas
+    const marker = document.getElementById('company-marker'); // 🆕 抓 marker
+    const hint = document.getElementById('radar-zoom-hint');
+    if (!wrapper || !canvas) return;
+
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let startTransX = 0, startTransY = 0;
+
+    const MIN_SCALE = 1;
+    const MAX_SCALE = 5;
+    const ZOOM_SPEED = 0.2;
+
+function applyTransform() {
+
+
+    // 🆕 邊界限制:不讓雷達圖被拖出可視範圍
+    if (scale > 1) {
+        const rect = wrapper.getBoundingClientRect();
+        // 圖片放大後,可移動的最大距離 = (放大後尺寸 - 容器尺寸) / 2
+        const maxX = (rect.width * (scale - 1)) / 2;
+        const maxY = (rect.height * (scale - 1)) / 2;
+        
+        // 限制 translateX 和 translateY 在可移動範圍內
+        translateX = Math.max(-maxX, Math.min(maxX, translateX));
+        translateY = Math.max(-maxY, Math.min(maxY, translateY));
+    } else {
+        // 縮放回 1x 時強制歸零(避免有殘留偏移)
+        translateX = 0;
+        translateY = 0;
+    }
+
+    canvas.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+    
+    if (marker) {
+        const inverseScale = 1 / scale;
+        const dot = marker.querySelector('.marker-dot');
+        const label = marker.querySelector('.marker-label');
+        
+        if (dot) dot.style.transform = `scale(${inverseScale})`;
+        
+if (label) {
+    // 手機用 5px,桌機用 14px
+    const baseGap = window.innerWidth <= 768 ? 5 : 14;  // 10 → 5
+    const gap = baseGap * inverseScale;
+    label.style.transform = `translate(-50%, calc(-100% - ${gap}px)) scale(${inverseScale})`;
+}
+    }   // ← 你之前漏掉這個關閉括號
+    
+    if (scale > 1) {
+        wrapper.classList.add('zoomed');
+        if (hint) hint.textContent = `🔍 ${scale.toFixed(1)}x · 雙擊還原`;
+    } else {
+        wrapper.classList.remove('zoomed');
+        if (hint) hint.textContent = '🔍 滾輪縮放 · 拖曳移動 · 雙擊還原';
+    }
+}
+
+    function reset() {
+        scale = 1;
+        translateX = 0;
+        translateY = 0;
+        applyTransform();
+    }
+
+    // 滾輪縮放
+    wrapper.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const rect = wrapper.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left - rect.width / 2;
+        const mouseY = e.clientY - rect.top - rect.height / 2;
+        const delta = e.deltaY < 0 ? ZOOM_SPEED : -ZOOM_SPEED;
+        const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, scale + delta));
+        if (newScale === scale) return;
+        const scaleRatio = newScale / scale;
+        translateX = mouseX - (mouseX - translateX) * scaleRatio;
+        translateY = mouseY - (mouseY - translateY) * scaleRatio;
+        scale = newScale;
+        if (scale === 1) {
+            translateX = 0;
+            translateY = 0;
+        }
+        applyTransform();
+    }, { passive: false });
+
+    // 拖曳
+    wrapper.addEventListener('mousedown', (e) => {
+        if (scale <= 1) return;
+        isDragging = true;
+        wrapper.classList.add('dragging');
+        startX = e.clientX;
+        startY = e.clientY;
+        startTransX = translateX;
+        startTransY = translateY;
+        canvas.style.transition = 'none';   // 🆕 改 canvas
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+        translateX = startTransX + (e.clientX - startX);
+        translateY = startTransY + (e.clientY - startY);
+        applyTransform();
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+        wrapper.classList.remove('dragging');
+        canvas.style.transition = 'transform 0.15s ease-out';   // 🆕 改 canvas
+    });
+
+    wrapper.addEventListener('dblclick', reset);
+
+    // 🆕 初始化標籤位置
+    if (document.readyState === 'complete') {
+        applyTransform();
+    } else {
+        window.addEventListener('load', applyTransform);
+    }
+
+})();
+
+
+// ============================================
+// === 🌦️ 天氣動態背景 ===
+// ============================================
+
+// 偵測天氣文字屬於哪一類
+function detectWeatherType(weatherText) {
+    if (!weatherText) return 'sunny';
+    const text = weatherText.toString();
+    if (text.includes('雷')) return 'thunder';
+    if (text.includes('雨')) return 'rain';
+    if (text.includes('霧')) return 'fog';
+    if (text.includes('陰')) return 'overcast';
+    if (text.includes('多雲')) return 'cloudy';
+    return 'sunny';  // 預設晴天
+}
+
+// 套用天氣特效
+function applyWeatherEffect(weatherText) {
+    if (!document.body.classList.contains('weather-effects-on')) return;
+
+    const type = detectWeatherType(weatherText);
+    const dashboard = document.querySelector('.dashboard');
+    const effects = document.getElementById('weather-effects');
+    if (!dashboard || !effects) return;
+
+    // 移除舊的天氣 class,套上新的
+    dashboard.classList.remove(
+        'weather-sunny', 'weather-cloudy', 'weather-overcast',
+        'weather-rain', 'weather-thunder', 'weather-fog'
+    );
+    dashboard.classList.add('weather-' + type);
+
+    // 清空舊動畫,生成新的
+    effects.innerHTML = '';
+    generateWeatherEffects(type, effects);
+}
+
+// 產生對應動畫元素
+function generateWeatherEffects(type, container) {
+    switch(type) {
+        case 'sunny':
+            const sun = document.createElement('div');
+            sun.className = 'big-sun';
+            container.appendChild(sun);
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.className = 'sun-particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 6 + 's';
+                p.style.animationDuration = (4 + Math.random() * 3) + 's';
+                container.appendChild(p);
+            }
+            break;
+
+        case 'cloudy':
+        case 'overcast':
+            const cloudCount = type === 'overcast' ? 4 : 3;
+            for (let i = 0; i < cloudCount; i++) {
+                const c = document.createElement('div');
+                c.className = 'cloud';
+                const size = 50 + Math.random() * 60;
+                c.style.width = size + 'px';
+                c.style.height = (size * 0.4) + 'px';
+                c.style.top = Math.random() * 60 + '%';
+                c.style.animationDuration = (25 + Math.random() * 25) + 's';
+                c.style.animationDelay = -Math.random() * 50 + 's';
+                container.appendChild(c);
+            }
+            break;
+
+        case 'rain':
+            for (let i = 0; i < 25; i++) {
+                const r = document.createElement('div');
+                r.className = 'raindrop';
+                r.style.left = Math.random() * 100 + '%';
+                r.style.animationDuration = (0.5 + Math.random() * 0.5) + 's';
+                r.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(r);
+            }
+            break;
+
+        case 'thunder':
+            for (let i = 0; i < 35; i++) {
+                const r = document.createElement('div');
+                r.className = 'raindrop';
+                r.style.left = Math.random() * 100 + '%';
+                r.style.animationDuration = (0.3 + Math.random() * 0.4) + 's';
+                r.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(r);
+            }
+            const flash = document.createElement('div');
+            flash.className = 'lightning-flash';
+            container.appendChild(flash);
+            break;
+
+        case 'fog':
+            for (let i = 0; i < 3; i++) {
+                const f = document.createElement('div');
+                f.className = 'fog';
+                f.style.top = (i * 35) + '%';
+                f.style.animationDuration = (25 + Math.random() * 15) + 's';
+                f.style.animationDelay = -Math.random() * 30 + 's';
+                container.appendChild(f);
+            }
+            break;
+    }
+}
+
+// 切換動態背景
+function toggleWeatherEffects() {
+    const isOn = !document.body.classList.contains('weather-effects-on');
+    document.body.classList.toggle('weather-effects-on', isOn);
+    localStorage.setItem('weather-effects-on', isOn);
+
+    const btn = document.getElementById('weather-bg-btn');
+    if (btn) btn.textContent = isOn ? '🚫 關閉特效' : '🌧️ 動態背景';
+
+    const dashboard = document.querySelector('.dashboard');
+    if (!dashboard) return;
+
+    if (isOn) {
+        dashboard.classList.add('weather-bg-active');
+        const weatherText = document.getElementById('weather-desc')?.textContent || '';
+        applyWeatherEffect(weatherText);
+    } else {
+        dashboard.classList.remove('weather-bg-active',
+            'weather-sunny', 'weather-cloudy', 'weather-overcast',
+            'weather-rain', 'weather-thunder', 'weather-fog');
+        const effects = document.getElementById('weather-effects');
+        if (effects) effects.innerHTML = '';
+    }
+}
+
+// 還原使用者上次設定
+(function restoreWeatherEffects() {
+    if (localStorage.getItem('weather-effects-on') === 'true') {
+        document.body.classList.add('weather-effects-on');
+        const dashboard = document.querySelector('.dashboard');
+        if (dashboard) dashboard.classList.add('weather-bg-active');
+
+        window.addEventListener('load', () => {
+            const btn = document.getElementById('weather-bg-btn');
+            if (btn) btn.textContent = '🚫 關閉特效';
+            // 等氣象資料載入後再套用
+            setTimeout(() => {
+                const weatherText = document.getElementById('weather-desc')?.textContent || '';
+                applyWeatherEffect(weatherText);
+            }, 1500);
+        });
+    }
+})();
+
+
     </script>
-</body>
-</html>
