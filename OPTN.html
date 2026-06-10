@@ -1811,6 +1811,9 @@ if (currentTemp !== '儀器調校中' && currentTemp !== '--' && currentHeat !==
 const weatherText = document.getElementById('weather-desc')?.textContent || '';
 applyWeatherEffect(weatherText);
 
+    // 🆕 檢查是否要發 LINE 警報
+    checkAndSendAlert();
+
 }
 
             } catch (error) {
@@ -2277,6 +2280,78 @@ function toggleWeatherEffects() {
         });
     }
 })();
+
+
+
+
+
+
+// ============================================
+// === 🚨 LINE 警報通知 ===
+// ============================================
+
+// ⚠️ 你的 GAS 部署網址(就是現在 API_URL 用的那個 base)
+const GAS_BASE_URL = 'https://script.google.com/macros/s/AKfycbzxIizfW0vEEPZwihep_1fhwZ0NxYgdhc2owbQStXyxK6EyM5bIossc-8aNosc2Z6A/exec';
+
+// 廠區名稱(台南台中分別填)
+const FACTORY_NAME = '台南廠';   // 台中廠記得改成「台中廠」
+
+// 儀表板網址(讓 LINE 點進來看的連結,可選)
+const DASHBOARD_URL = window.location.href;
+
+// 警報門檻
+const ALERT_HEAT_INDEX_THRESHOLD = 40.6;   // 第三級門檻
+let lastAlertSent = 0;                      // 前端冷卻紀錄(避免短時間重複)
+
+// 檢查是否需要發警報
+function checkAndSendAlert() {
+    const heatIndexText = document.getElementById('heat-index-value')?.textContent || '';
+    const heatIndex = parseFloat(heatIndexText);
+    
+    // 沒有有效熱指數 → 不發
+    if (isNaN(heatIndex)) return;
+    
+    // 未達門檻 → 不發
+    if (heatIndex < ALERT_HEAT_INDEX_THRESHOLD) return;
+    
+    // 前端冷卻(20 分鐘內不重複嘗試,GAS 那邊還有 30 分鐘嚴格冷卻)
+    const now = Date.now();
+    if (now - lastAlertSent < 20 * 60 * 1000) return;
+    
+    // 收集警報資料
+    const tempText = document.getElementById('heat-temperature')?.textContent || '';
+    const humidityText = document.getElementById('heat-humidity')?.textContent || '';
+    const riskLevel = document.getElementById('heat-risk-level')?.textContent?.replace('風險等級:', '').trim() || '';
+    const obsTime = document.getElementById('obs-time-display')?.textContent || '';
+    
+    const params = new URLSearchParams({
+        action: 'alert',
+        factory: FACTORY_NAME,
+        heatIndex: heatIndex.toFixed(1),
+        temp: parseFloat(tempText).toFixed(1),
+        humidity: parseFloat(humidityText).toFixed(0),
+        riskLevel: riskLevel,
+        obsTime: obsTime,
+        dashboardUrl: DASHBOARD_URL
+    });
+    
+    // 發送請求到 GAS
+    fetch(`${GAS_BASE_URL}?${params.toString()}`)
+        .then(res => res.json())
+        .then(result => {
+            console.log('📤 LINE 警報結果:', result);
+            if (result.status === 'success') {
+                lastAlertSent = now;
+                console.log('✅ LINE 警報已發送');
+            } else if (result.status === 'skip') {
+                console.log('⏭️ 跳過警報:', result.reason);
+            }
+        })
+        .catch(err => {
+            console.error('❌ LINE 警報失敗:', err);
+        });
+}
+
 
 
     </script>
