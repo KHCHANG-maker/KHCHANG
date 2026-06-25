@@ -174,7 +174,7 @@ body {
     background: linear-gradient(135deg, #4DA6D6, #1e5a96);
     box-shadow: 0 6px 18px rgba(77,166,214,0.25);
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     gap: 18px;
     align-items: center;
 }
@@ -193,6 +193,105 @@ body {
 .heat-main-title { font-size: 0.88em; opacity: 0.95; }
 .heat-main-value { font-size: 2.2em; font-weight: 800; line-height: 1; }
 .heat-main-meta { font-size: 0.95em; opacity: 0.97; line-height: 1.7; }
+
+/* ============================================ */
+/* === 🆕 熱指數位置指標 === */
+/* ============================================ */
+.heat-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    flex-shrink: 0;
+    padding: 30px 8px 4px 18px;
+    border-left: 1px solid rgba(255,255,255,0.3);
+    justify-content: center;
+}
+
+.heat-bar {
+    position: relative;
+    width: 100%;
+    height: 14px;
+    border-radius: 8px;
+    background: linear-gradient(to right,
+        #22c55e 0%,      #22c55e 16.52%,
+        #d4ed31 16.52%,  #d4ed31 41.74%,
+        #ff9800 41.74%,  #ff9800 83.18%,
+        #ef4444 83.18%,  #ef4444 100%
+    );
+    box-shadow: 
+        inset 0 1px 3px rgba(0,0,0,0.4),
+        0 1px 2px rgba(0,0,0,0.2);
+}
+
+.heat-marker {
+    position: absolute;
+    top: -8px;
+    width: 4px;
+    height: 30px;
+    background: white;
+    border-radius: 2px;
+    box-shadow: 0 0 10px rgba(255,255,255,0.9);
+    transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-50%);
+    z-index: 5;
+}
+
+.heat-marker::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid white;
+}
+
+.heat-marker-label {
+    position: absolute;
+    top: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    color: #1a1a1a;
+    font-size: 0.72em;
+    font-weight: bold;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+}
+
+.heat-marker-label::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid white;
+}
+
+.heat-bar-scale {
+    position: relative;
+    height: 14px;
+    margin-top: 6px;
+    font-size: 0.68em;
+    color: rgba(255,255,255,0.95);
+    font-weight: bold;
+}
+.heat-bar-scale span {
+    position: absolute;
+    transform: translateX(-50%);
+}
+.heat-bar-scale .s1 { left: 0%; }
+.heat-bar-scale .s2 { left: 16.52%; }
+.heat-bar-scale .s3 { left: 41.74%; }
+.heat-bar-scale .s4 { left: 83.18%; }
+
 
 /* === 詳細觀測 === */
 .detail-row {
@@ -621,6 +720,15 @@ body {
         padding: 14px;
         text-align: center;
     }
+
+/* 🆕 手機版熱指數位置指標適配 */
+.heat-bar-wrap {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.3);
+    padding: 14px 0 4px 0;
+    margin-top: 4px;
+}
 
     .heat-main-left {
         border-right: none;
@@ -1137,16 +1245,30 @@ body.outdoor-mode .dashboard.weather-bg-active .card {
             <div class="heat-index-container">
                 <div class="heat-index-title">🔥 熱指數評估</div>
                 <div class="heat-index-grid"></div>
-                <div class="heat-main-box" id="heat-box">
-                    <div class="heat-main-left">
-                        <div class="heat-main-title">目前熱指數</div>
-                        <div class="heat-main-value" id="heat-index-value">--</div>
-                    </div>
-                    <div>
-                        <div class="heat-main-meta" id="heat-risk-level">風險等級:--</div>
-                        <div class="heat-main-meta" id="heat-mapping-info">表格對應:--</div>
-                    </div>
-                </div>
+<div class="heat-main-box" id="heat-box">
+    <div class="heat-main-left">
+        <div class="heat-main-title">目前熱指數</div>
+        <div class="heat-main-value" id="heat-index-value">--</div>
+    </div>
+    <div>
+        <div class="heat-main-meta" id="heat-risk-level">風險等級:--</div>
+        <div class="heat-main-meta" id="heat-mapping-info">表格對應:--</div>
+    </div>
+    <!-- 🆕 熱指數位置指標 -->
+    <div class="heat-bar-wrap" id="heat-bar-wrap">
+        <div class="heat-bar">
+            <div class="heat-marker" id="heatMarker" style="display:none; left:0%;">
+                <div class="heat-marker-label" id="markerLabel">--</div>
+            </div>
+        </div>
+        <div class="heat-bar-scale">
+            <span class="s1">26.7</span>
+            <span class="s2">32.2</span>
+            <span class="s3">40.6</span>
+            <span class="s4">54.4</span>
+        </div>
+    </div>
+</div>
             </div>
 
             <!-- 9 個觀測卡片 -->
@@ -1319,6 +1441,29 @@ function setCompanyMarkerPosition() {
 }
 
 window.addEventListener('load', setCompanyMarkerPosition);
+
+
+// 🆕 更新熱指數位置指標
+function updateHeatBar(heatIndex) {
+    const marker = document.getElementById('heatMarker');
+    const label = document.getElementById('markerLabel');
+    if (!marker || !label) return;
+    
+    if (isNaN(heatIndex) || heatIndex < 26.7) {
+        marker.style.display = 'none';
+        return;
+    }
+    
+    marker.style.display = 'block';
+    
+    const min = 26.7, max = 60.0;
+    let percent = ((heatIndex - min) / (max - min)) * 100;
+    if (heatIndex > max) percent = 100;
+    
+    marker.style.left = percent + '%';
+    label.textContent = heatIndex.toFixed(1) + '°C';
+}
+
 
 
 // === 歷史資料儲存與圖表(內嵌版,多站獨立)===
@@ -1807,6 +1952,10 @@ const weatherText = document.getElementById('weather-desc')?.textContent || '';
 applyWeatherEffect(weatherText);
 
 }
+
+// 🆕 更新熱指數位置指標
+const heatIndexValue = parseFloat(document.getElementById('heat-index-value').textContent);
+updateHeatBar(heatIndexValue);
 
             } catch (error) {
                 console.error('錯誤:', error);
