@@ -1812,7 +1812,10 @@ const weatherText = document.getElementById('weather-desc')?.textContent || '';
 applyWeatherEffect(weatherText);
 
     // 🆕 檢查是否要發 LINE 警報
-    checkAndSendAlert();
+    // 🚫 2025-06-25 移除網頁端 LINE 警報觸發
+    // 原因:開網頁時可能讀到舊 DOM/cache,曾誤推 6/23 舊資料
+    // 改由 GAS autoCheckAndAlert 每 10 分鐘自動檢查(更可靠)
+    //checkAndSendAlert();
 
 }
 
